@@ -3,96 +3,91 @@ import { Handle, Position, type NodeProps } from '@xyflow/react';
 import type { FunnelNodeData } from '../types';
 import { NODE_COLORS, NODE_ICONS } from '../constants/nodeTemplates';
 
-// Use a generic NodeProps with our data type
-type FunnelNodeComponentProps = NodeProps & {
-  data: FunnelNodeData;
-};
+type Props = NodeProps & { data: FunnelNodeData };
 
 /**
- * Custom node component for the funnel builder.
- * Displays the node type icon, label, and a button preview.
+ * Node card: icon + title (+ optional ⚠️), thumbnail, primary button label.
+ * ○ Left = incoming (target). ● Right = outgoing (source). Thank You has no outgoing.
  */
-function FunnelNodeComponent({ data, selected }: FunnelNodeComponentProps) {
+function FunnelNodeComponent({ data, selected }: Props) {
   const nodeType = data.nodeType;
   const colors = NODE_COLORS[nodeType];
   const icon = NODE_ICONS[nodeType];
   const isThankYou = nodeType === 'thankYou';
-  
-  // Prevent drag when clicking on the button preview
-  const handleButtonClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
-  
+  const hasWarning = Boolean(data.hasWarning);
+
+  const stopProp = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
+
   return (
     <div
       className={`
-        relative min-w-[180px] rounded-lg border-2 shadow-md
-        ${colors.bg} ${colors.border}
-        ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
-        transition-shadow duration-200
+        relative w-[200px] rounded-lg border-2 bg-white shadow-md transition-shadow
+        ${colors.border}
+        ${selected ? 'ring-2 ring-indigo-500 ring-offset-2 shadow-lg' : ''}
       `}
       role="button"
-      aria-label={`${data.label} node`}
+      aria-label={`${data.label} page`}
       tabIndex={0}
     >
-      {/* Input Handle (top) - not for Sales Page typically, but we allow it */}
+      {/* Incoming: left ○ */}
       <Handle
         type="target"
-        position={Position.Top}
+        position={Position.Left}
         id="target"
-        className="!w-3 !h-3 !bg-gray-500 !border-2 !border-white"
-        aria-label="Connect from another node"
+        className="!left-0 !top-1/2 !-translate-y-1/2 !h-3 !w-3 !rounded-full !border-2 !border-white !bg-slate-400 hover:!bg-indigo-500"
+        aria-label="Incoming connection"
       />
-      
-      {/* Node Content */}
-      <div className="p-3">
-        {/* Header with icon and label */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-lg" role="img" aria-hidden="true">
+
+      <div className="px-3 py-3 pl-5 pr-5">
+        {/* Title row: icon + label + optional warning */}
+        <div className="mb-2 flex items-center gap-2">
+          <span className="text-lg leading-none" aria-hidden>
             {icon}
           </span>
-          <h3 className={`font-semibold text-sm ${colors.text}`}>
+          <h3 className={`min-w-0 flex-1 truncate font-semibold text-sm ${colors.text}`}>
             {data.label}
           </h3>
+          {hasWarning && (
+            <span
+              className="shrink-0 text-amber-500"
+              title="This node has a validation warning"
+              aria-label="Warning"
+            >
+              ⚠︎
+            </span>
+          )}
         </div>
-        
         {/* Thumbnail placeholder */}
-        <div className="bg-white/50 rounded border border-gray-200 h-16 mb-2 flex items-center justify-center">
-          <span className="text-gray-400 text-xs">Page Preview</span>
+        <div className="mb-2 flex h-14 items-center justify-center rounded border border-slate-200 bg-slate-50/80">
+          <span className="text-xs text-slate-400">thumbnail</span>
         </div>
-        
-        {/* Button preview */}
-        <button
-          onClick={handleButtonClick}
-          className={`
-            w-full py-1.5 px-3 rounded text-xs font-medium
-            ${nodeType === 'salesPage' ? 'bg-blue-500 text-white' : ''}
-            ${nodeType === 'orderPage' ? 'bg-green-500 text-white' : ''}
-            ${nodeType === 'upsell' ? 'bg-purple-500 text-white' : ''}
-            ${nodeType === 'downsell' ? 'bg-orange-500 text-white' : ''}
-            ${nodeType === 'thankYou' ? 'bg-emerald-500 text-white' : ''}
-            cursor-default
-          `}
-          tabIndex={-1}
-          aria-label={`Button: ${data.buttonLabel}`}
-        >
-          {data.buttonLabel}
-        </button>
+        {/* Primary button label (static) */}
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={stopProp}
+            className={`w-full rounded py-2 px-3 text-xs font-medium ${colors.btn}`}
+            tabIndex={-1}
+            aria-hidden
+          >
+            {data.buttonLabel}
+          </button>
+        </div>
+        <p className="mt-1 text-[10px] text-slate-400">Primary button: &quot;{data.buttonLabel}&quot;</p>
       </div>
-      
-      {/* Output Handle (bottom) - not for Thank You pages */}
+
+      {/* Outgoing: right ●. Thank You has no outgoing (×) */}
       {!isThankYou && (
         <Handle
           type="source"
-          position={Position.Bottom}
+          position={Position.Right}
           id="source"
-          className="!w-3 !h-3 !bg-gray-500 !border-2 !border-white"
-          aria-label="Connect to another node"
+          className="!right-0 !top-1/2 !-translate-y-1/2 !h-3 !w-3 !rounded-full !border-2 !border-white !bg-slate-500 hover:!bg-indigo-500"
+          aria-label="Outgoing connection"
         />
       )}
     </div>
   );
 }
 
-// Memoize to prevent unnecessary re-renders
 export const FunnelNode = memo(FunnelNodeComponent);

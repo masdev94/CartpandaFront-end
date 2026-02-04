@@ -1,35 +1,40 @@
 import type { NodeTemplate, FunnelNodeType } from '../types';
 
-// Color palette for each node type
-export const NODE_COLORS: Record<FunnelNodeType, { bg: string; border: string; text: string }> = {
+// Tailwind classes for each node type (used by FunnelNode and Sidebar)
+export const NODE_COLORS: Record<FunnelNodeType, { bg: string; border: string; text: string; btn: string }> = {
   salesPage: {
-    bg: 'bg-blue-50',
-    border: 'border-blue-400',
-    text: 'text-blue-700',
+    bg: 'bg-[#EFF6FF]',
+    border: 'border-[#3B82F6]',
+    text: 'text-[#1D4ED8]',
+    btn: 'bg-[#3B82F6] text-white',
   },
   orderPage: {
-    bg: 'bg-green-50',
-    border: 'border-green-400',
-    text: 'text-green-700',
+    bg: 'bg-[#ECFDF5]',
+    border: 'border-[#10B981]',
+    text: 'text-[#047857]',
+    btn: 'bg-[#10B981] text-white',
   },
   upsell: {
-    bg: 'bg-purple-50',
-    border: 'border-purple-400',
-    text: 'text-purple-700',
+    bg: 'bg-[#F5F3FF]',
+    border: 'border-[#8B5CF6]',
+    text: 'text-[#5B21B6]',
+    btn: 'bg-[#8B5CF6] text-white',
   },
   downsell: {
-    bg: 'bg-orange-50',
-    border: 'border-orange-400',
-    text: 'text-orange-700',
+    bg: 'bg-[#FFF7ED]',
+    border: 'border-[#F97316]',
+    text: 'text-[#C2410C]',
+    btn: 'bg-[#F97316] text-white',
   },
   thankYou: {
-    bg: 'bg-emerald-50',
-    border: 'border-emerald-400',
-    text: 'text-emerald-700',
+    bg: 'bg-[#ECFDF5]',
+    border: 'border-[#059669]',
+    text: 'text-[#065F46]',
+    btn: 'bg-[#059669] text-white',
   },
 };
 
-// SVG icons for each node type (simple, accessible)
+// Simple icons (emoji kept for speed; could be SVG later)
 export const NODE_ICONS: Record<FunnelNodeType, string> = {
   salesPage: '📄',
   orderPage: '🛒',
@@ -38,51 +43,14 @@ export const NODE_ICONS: Record<FunnelNodeType, string> = {
   thankYou: '✅',
 };
 
-// Node templates for the palette
 export const NODE_TEMPLATES: NodeTemplate[] = [
-  {
-    type: 'salesPage',
-    label: 'Sales Page',
-    icon: NODE_ICONS.salesPage,
-    description: 'Landing page to present your offer',
-    buttonLabel: 'Buy Now',
-    color: 'blue',
-  },
-  {
-    type: 'orderPage',
-    label: 'Order Page',
-    icon: NODE_ICONS.orderPage,
-    description: 'Checkout page for payment',
-    buttonLabel: 'Complete Order',
-    color: 'green',
-  },
-  {
-    type: 'upsell',
-    label: 'Upsell',
-    icon: NODE_ICONS.upsell,
-    description: 'Additional offer after purchase',
-    buttonLabel: 'Yes, Add This!',
-    color: 'purple',
-  },
-  {
-    type: 'downsell',
-    label: 'Downsell',
-    icon: NODE_ICONS.downsell,
-    description: 'Alternative offer if upsell declined',
-    buttonLabel: 'Get This Instead',
-    color: 'orange',
-  },
-  {
-    type: 'thankYou',
-    label: 'Thank You',
-    icon: NODE_ICONS.thankYou,
-    description: 'Confirmation page after purchase',
-    buttonLabel: 'View Order',
-    color: 'emerald',
-  },
+  { type: 'salesPage', label: 'Sales Page', icon: NODE_ICONS.salesPage, description: 'Landing page for your offer', buttonLabel: 'Buy Now', color: 'blue' },
+  { type: 'orderPage', label: 'Order Page', icon: NODE_ICONS.orderPage, description: 'Checkout and payment', buttonLabel: 'Complete Order', color: 'green' },
+  { type: 'upsell', label: 'Upsell', icon: NODE_ICONS.upsell, description: 'Extra offer after purchase', buttonLabel: 'Yes, Add This!', color: 'purple' },
+  { type: 'downsell', label: 'Downsell', icon: NODE_ICONS.downsell, description: 'Alternative if they decline', buttonLabel: 'Get This Instead', color: 'orange' },
+  { type: 'thankYou', label: 'Thank You', icon: NODE_ICONS.thankYou, description: 'Confirmation page', buttonLabel: 'View Order', color: 'emerald' },
 ];
 
-// Default labels for each node type
 export const DEFAULT_LABELS: Record<FunnelNodeType, string> = {
   salesPage: 'Sales Page',
   orderPage: 'Order Page',
@@ -91,7 +59,6 @@ export const DEFAULT_LABELS: Record<FunnelNodeType, string> = {
   thankYou: 'Thank You',
 };
 
-// Default button labels for each node type
 export const DEFAULT_BUTTON_LABELS: Record<FunnelNodeType, string> = {
   salesPage: 'Buy Now',
   orderPage: 'Complete Order',
@@ -100,5 +67,4 @@ export const DEFAULT_BUTTON_LABELS: Record<FunnelNodeType, string> = {
   thankYou: 'View Order',
 };
 
-// localStorage key for persisting funnel state
 export const STORAGE_KEY = 'cartpanda-funnel-builder-state';

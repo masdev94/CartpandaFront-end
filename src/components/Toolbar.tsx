@@ -10,15 +10,14 @@ interface ToolbarProps {
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  validationOpen: boolean;
+  onToggleValidation: () => void;
+  validationIssueCount: number;
 }
 
-/**
- * Toolbar with actions for the funnel builder:
- * - Export JSON
- * - Import JSON
- * - Clear canvas
- * - Undo/Redo
- */
+const btn =
+  'inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:pointer-events-none disabled:opacity-50';
+
 function ToolbarComponent({
   onImport,
   onExport,
@@ -27,13 +26,15 @@ function ToolbarComponent({
   onRedo,
   canUndo,
   canRedo,
+  validationOpen,
+  onToggleValidation,
+  validationIssueCount,
 }: ToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = useCallback(() => {
     const state = onExport();
-    const timestamp = new Date().toISOString().slice(0, 10);
-    exportFunnelAsJson(state, `funnel-${timestamp}.json`);
+    exportFunnelAsJson(state, `funnel-${new Date().toISOString().slice(0, 10)}.json`);
   }, [onExport]);
 
   const handleImportClick = useCallback(() => {
@@ -41,125 +42,120 @@ function ToolbarComponent({
   }, []);
 
   const handleFileChange = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
       if (!file) return;
-
       const state = await importFunnelFromJson(file);
-      if (state) {
-        onImport(state);
-      } else {
-        alert('Invalid funnel file. Please select a valid JSON export.');
-      }
-
-      // Reset input so the same file can be selected again
-      event.target.value = '';
+      if (state) onImport(state);
+      else alert('Invalid file. Please choose a funnel JSON export.');
+      e.target.value = '';
     },
     [onImport]
   );
 
   const handleClear = useCallback(() => {
-    if (window.confirm('Are you sure you want to clear the canvas? This cannot be undone.')) {
-      onClear();
-    }
+    if (window.confirm('Clear the entire canvas? This cannot be undone.')) onClear();
   }, [onClear]);
-
-  const buttonClass = `
-    px-3 py-1.5 rounded text-sm font-medium
-    transition-colors duration-200
-    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-  `;
 
   return (
     <header
-      className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between"
+      className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-2 shadow-sm"
       role="toolbar"
       aria-label="Funnel builder toolbar"
     >
-      <div className="flex items-center gap-2">
-        {/* Logo/Title */}
-        <h1 className="text-lg font-bold text-gray-800 mr-4">
-          <span className="text-blue-600">Funnel</span> Builder
+      <div className="flex items-center gap-4">
+        <h1 className="text-lg font-semibold text-slate-800">
+          Cartpanda Funnel Builder
         </h1>
-
-        {/* Undo/Redo */}
-        <div className="flex items-center border-r border-gray-200 pr-2 mr-2">
+        <div className="hidden items-center gap-1 sm:flex">
           <button
+            type="button"
             onClick={onUndo}
             disabled={!canUndo}
-            className={`${buttonClass} text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed`}
+            className={`${btn} text-slate-500 hover:bg-slate-100`}
             aria-label="Undo"
             title="Undo (Ctrl+Z)"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-            </svg>
+            <UndoIcon />
           </button>
           <button
+            type="button"
             onClick={onRedo}
             disabled={!canRedo}
-            className={`${buttonClass} text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed`}
+            className={`${btn} text-slate-500 hover:bg-slate-100`}
             aria-label="Redo"
             title="Redo (Ctrl+Shift+Z)"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
-            </svg>
+            <RedoIcon />
           </button>
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex items-center gap-2">
         <button
+          type="button"
           onClick={handleExport}
-          className={`${buttonClass} bg-blue-500 text-white hover:bg-blue-600`}
-          aria-label="Export funnel as JSON"
+          className={`${btn} border border-slate-300 bg-white text-slate-700 hover:bg-slate-50`}
+          aria-label="Export JSON"
         >
-          <span className="flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Export JSON
-          </span>
+          Export
         </button>
-
         <button
+          type="button"
           onClick={handleImportClick}
-          className={`${buttonClass} bg-gray-100 text-gray-700 hover:bg-gray-200`}
-          aria-label="Import funnel from JSON"
+          className={`${btn} border border-slate-300 bg-white text-slate-700 hover:bg-slate-50`}
+          aria-label="Import JSON"
         >
-          <span className="flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-            Import JSON
-          </span>
+          Import
         </button>
-
+        <button
+          type="button"
+          onClick={onToggleValidation}
+          className={`${btn} relative border ${validationOpen ? 'border-amber-400 bg-amber-50 text-amber-800' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}
+          aria-label="Validation"
+          aria-expanded={validationOpen}
+        >
+          <span aria-hidden>⚠︎</span>
+          Validation
+          {validationIssueCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white">
+              {validationIssueCount}
+            </span>
+          )}
+        </button>
         <input
           ref={fileInputRef}
           type="file"
           accept=".json"
           onChange={handleFileChange}
           className="hidden"
-          aria-hidden="true"
+          aria-hidden
         />
-
         <button
+          type="button"
           onClick={handleClear}
-          className={`${buttonClass} text-red-600 hover:bg-red-50`}
+          className={`${btn} text-red-600 hover:bg-red-50`}
           aria-label="Clear canvas"
         >
-          <span className="flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            Clear
-          </span>
+          Clear
         </button>
       </div>
     </header>
+  );
+}
+
+function UndoIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+    </svg>
+  );
+}
+function RedoIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
+    </svg>
   );
 }
 

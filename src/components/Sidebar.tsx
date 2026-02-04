@@ -1,116 +1,81 @@
 import { memo, useCallback } from 'react';
 import { NODE_TEMPLATES } from '../constants/nodeTemplates';
 import type { FunnelNodeType, NodeTemplate } from '../types';
+import { NODE_COLORS } from '../constants/nodeTemplates';
 
 interface SidebarProps {
   onDragStart: (event: React.DragEvent, nodeType: FunnelNodeType) => void;
 }
 
-interface PaletteItemProps {
+function PaletteItem({
+  template,
+  onDragStart,
+}: {
   template: NodeTemplate;
   onDragStart: (event: React.DragEvent, nodeType: FunnelNodeType) => void;
-}
-
-/**
- * Individual draggable item in the palette
- */
-const PaletteItem = memo(function PaletteItem({ template, onDragStart }: PaletteItemProps) {
+}) {
   const handleDragStart = useCallback(
-    (event: React.DragEvent) => {
-      onDragStart(event, template.type);
+    (e: React.DragEvent) => {
+      e.dataTransfer.setData('application/reactflow', template.type);
+      e.dataTransfer.effectAllowed = 'move';
+      onDragStart(e, template.type);
     },
     [onDragStart, template.type]
   );
 
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      // Allow keyboard users to "grab" the item with Enter/Space
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        // For keyboard accessibility, we could implement a click-to-place mode
-        // For now, we just focus the element
-      }
-    },
-    []
-  );
-
-  const colorClasses: Record<string, string> = {
-    blue: 'border-blue-300 bg-blue-50 hover:bg-blue-100',
-    green: 'border-green-300 bg-green-50 hover:bg-green-100',
-    purple: 'border-purple-300 bg-purple-50 hover:bg-purple-100',
-    orange: 'border-orange-300 bg-orange-50 hover:bg-orange-100',
-    emerald: 'border-emerald-300 bg-emerald-50 hover:bg-emerald-100',
-  };
+  const colors = NODE_COLORS[template.type];
 
   return (
     <div
       draggable
       onDragStart={handleDragStart}
-      onKeyDown={handleKeyDown}
-      tabIndex={0}
       role="button"
-      aria-label={`Drag ${template.label} node to canvas. ${template.description}`}
+      tabIndex={0}
+      aria-label={`Add ${template.label} to canvas. ${template.description}`}
       className={`
-        p-3 rounded-lg border-2 cursor-grab
-        ${colorClasses[template.color]}
-        transition-all duration-200
-        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-        active:cursor-grabbing
+        group flex cursor-grab items-center gap-3 rounded-lg border-2 p-3
+        transition-all duration-150 active:cursor-grabbing
+        focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:ring-offset-2
+        ${colors.bg} ${colors.border} border
+        hover:shadow-md
       `}
     >
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-lg" role="img" aria-hidden="true">
-          {template.icon}
-        </span>
-        <span className="font-medium text-sm text-gray-800">
-          {template.label}
-        </span>
+      <span className="text-xl leading-none" aria-hidden>
+        {template.icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="font-medium text-slate-800">{template.label}</div>
+        <div className="text-xs text-slate-500">{template.description}</div>
       </div>
-      <p className="text-xs text-gray-500">
-        {template.description}
-      </p>
+      <span className="text-xs font-medium text-slate-400 group-hover:text-slate-600">Drag →</span>
     </div>
   );
-});
+}
 
-/**
- * Sidebar palette containing draggable node templates.
- * Users drag items from here onto the canvas to create new nodes.
- */
 function SidebarComponent({ onDragStart }: SidebarProps) {
   return (
     <aside
-      className="w-64 bg-white border-r border-gray-200 p-4 overflow-y-auto"
-      aria-label="Node palette"
+      className="flex w-56 flex-col border-r border-slate-200 bg-white"
+      aria-label="Page types — drag onto canvas to add"
     >
-      <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">
-        Page Types
-      </h2>
-      <p className="text-xs text-gray-500 mb-4">
-        Drag and drop pages onto the canvas to build your funnel
-      </p>
-      
-      <div className="space-y-3" role="list" aria-label="Available node types">
-        {NODE_TEMPLATES.map((template) => (
-          <PaletteItem
-            key={template.type}
-            template={template}
-            onDragStart={onDragStart}
-          />
-        ))}
+      <div className="border-b border-slate-200 p-3">
+        <h2 className="text-sm font-semibold text-slate-800">Page types</h2>
+        <p className="mt-0.5 text-xs text-slate-500">
+          Drag → drop onto canvas to add.
+        </p>
       </div>
-      
-      {/* Instructions */}
-      <div className="mt-6 p-3 bg-gray-50 rounded-lg border border-gray-200">
-        <h3 className="text-xs font-semibold text-gray-700 mb-2">
-          Quick Tips
-        </h3>
-        <ul className="text-xs text-gray-500 space-y-1">
-          <li>• Drag pages to the canvas</li>
-          <li>• Connect pages by dragging from handles</li>
-          <li>• Pan canvas by dragging background</li>
-          <li>• Use scroll wheel to zoom</li>
+      <div className="flex-1 overflow-y-auto p-3">
+        <ul className="space-y-2" role="list">
+          {NODE_TEMPLATES.map((t) => (
+            <li key={t.type}>
+              <PaletteItem template={t} onDragStart={onDragStart} />
+            </li>
+          ))}
         </ul>
+        <div className="mt-4 rounded-lg bg-slate-50 p-3 text-xs text-slate-500">
+          <p className="font-medium text-slate-600">Tip</p>
+          <p className="mt-1">Connect: drag from ● (right handle) to ○ (left handle) on another node.</p>
+        </div>
       </div>
     </aside>
   );

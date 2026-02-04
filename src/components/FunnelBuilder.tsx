@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useRef, useEffect, useState, useMemo } from 'react';
 import {
   ReactFlow,
   Background,
@@ -16,9 +16,9 @@ import { Toolbar } from './Toolbar';
 import { ValidationPanel } from './ValidationPanel';
 import { MiniMap } from './MiniMap';
 import { useFunnelStore } from '../hooks/useFunnelStore';
+import { validateFunnel } from '../utils/validation';
 import type { FunnelNodeType } from '../types';
 
-// Register custom node types
 const nodeTypes = {
   salesPage: FunnelNode,
   orderPage: FunnelNode,
@@ -27,14 +27,11 @@ const nodeTypes = {
   thankYou: FunnelNode,
 };
 
-/**
- * Main FunnelBuilder component.
- * Combines the canvas, sidebar, toolbar, and validation panel.
- */
 export function FunnelBuilder() {
-  const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const reactFlowInstance = useRef<ReactFlowInstance | null>(null);
-  const draggedTypeRef = useRef<FunnelNodeType | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const flowRef = useRef<ReactFlowInstance | null>(null);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [validationOpen, setValidationOpen] = useState(false);
 
   const {
     nodes,
@@ -52,87 +49,91 @@ export function FunnelBuilder() {
     canRedo,
   } = useFunnelStore();
 
-  // Handle drag start from sidebar
-  const handleDragStart = useCallback(
-    (event: React.DragEvent, nodeType: FunnelNodeType) => {
-      draggedTypeRef.current = nodeType;
-      event.dataTransfer.setData('application/reactflow', nodeType);
-      event.dataTransfer.effectAllowed = 'move';
-    },
-    []
+  const issues = useMemo(() => validateFunnel(nodes, edges), [nodes, edges]);
+  const nodeIdsWithWarning = useMemo(
+    () => new Set(issues.map((i) => i.nodeId).filter(Boolean) as string[]),
+    [issues]
+  );
+  const nodesWithWarnings = useMemo(
+    () =>
+      nodes.map((n) => ({
+        ...n,
+        data: { ...n.data, hasWarning: nodeIdsWithWarning.has(n.id) },
+      })),
+    [nodes, nodeIdsWithWarning]
   );
 
-  // Handle drag over canvas
-  const handleDragOver = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
+  const handleDragStart = useCallback((_e: React.DragEvent, _nodeType: FunnelNodeType) => {}, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (e.dataTransfer.types.includes('application/reactflow')) setIsDraggingOver(true);
   }, []);
 
-  // Handle drop on canvas
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    const related = e.relatedTarget as HTMLElement | null;
+    if (related == null || !wrapperRef.current?.contains(related)) setIsDraggingOver(false);
+  }, []);
+
+  useEffect(() => {
+    const clearDrop = () => setIsDraggingOver(false);
+    document.addEventListener('dragend', clearDrop);
+    return () => document.removeEventListener('dragend', clearDrop);
+  }, []);
+
   const handleDrop = useCallback(
-    (event: React.DragEvent) => {
-      event.preventDefault();
-
-      const nodeType = event.dataTransfer.getData('application/reactflow') as FunnelNodeType;
-      if (!nodeType || !reactFlowInstance.current || !reactFlowWrapper.current) {
-        return;
-      }
-
-      // Get the position relative to the canvas
-      const bounds = reactFlowWrapper.current.getBoundingClientRect();
-      const position = reactFlowInstance.current.screenToFlowPosition({
-        x: event.clientX - bounds.left,
-        y: event.clientY - bounds.top,
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDraggingOver(false);
+      const nodeType = e.dataTransfer.getData('application/reactflow') as FunnelNodeType;
+      if (!nodeType || !flowRef.current || !wrapperRef.current) return;
+      const bounds = wrapperRef.current.getBoundingClientRect();
+      const position = flowRef.current.screenToFlowPosition({
+        x: e.clientX - bounds.left,
+        y: e.clientY - bounds.top,
       });
-
       addNode(nodeType, position);
-      draggedTypeRef.current = null;
     },
     [addNode]
   );
 
-  // Handle React Flow initialization
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleInit = useCallback((instance: any) => {
-    reactFlowInstance.current = instance as ReactFlowInstance;
+  const onInit = useCallback((instance: ReactFlowInstance) => {
+    flowRef.current = instance;
   }, []);
 
-  // Focus on a node (used by validation panel)
   const handleNodeFocus = useCallback((nodeId: string) => {
     const node = nodes.find((n) => n.id === nodeId);
-    if (node && reactFlowInstance.current) {
-      reactFlowInstance.current.setCenter(node.position.x + 90, node.position.y + 60, {
-        zoom: 1.5,
-        duration: 500,
+    if (node && flowRef.current) {
+      flowRef.current.setCenter(node.position.x + 100, node.position.y + 50, {
+        zoom: 1.2,
+        duration: 400,
       });
     }
   }, [nodes]);
 
-  // Keyboard shortcuts
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Undo: Ctrl/Cmd + Z
-      if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
-        event.preventDefault();
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
         undo();
       }
-      // Redo: Ctrl/Cmd + Shift + Z or Ctrl/Cmd + Y
       if (
-        ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'z') ||
-        ((event.ctrlKey || event.metaKey) && event.key === 'y')
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') ||
+        ((e.ctrlKey || e.metaKey) && e.key === 'y')
       ) {
-        event.preventDefault();
+        e.preventDefault();
         redo();
       }
     };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, [undo, redo]);
 
+  const isEmpty = nodes.length === 0;
+
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
-      {/* Toolbar */}
+    <div className="flex h-screen flex-col bg-slate-100">
       <Toolbar
         onImport={loadState}
         onExport={getState}
@@ -141,28 +142,30 @@ export function FunnelBuilder() {
         onRedo={redo}
         canUndo={canUndo}
         canRedo={canRedo}
+        validationOpen={validationOpen}
+        onToggleValidation={() => setValidationOpen((o) => !o)}
+        validationIssueCount={issues.length}
       />
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar */}
+      <div className="flex flex-1 overflow-hidden">
         <Sidebar onDragStart={handleDragStart} />
 
-        {/* Canvas */}
         <main
-          className="flex-1 relative"
-          ref={reactFlowWrapper}
+          ref={wrapperRef}
+          className="relative flex-1"
           role="application"
           aria-label="Funnel canvas"
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         >
           <ReactFlow
-            nodes={nodes as Node[]}
+            nodes={nodesWithWarnings as Node[]}
             edges={edges as Edge[]}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            onNodesChange={onNodesChange as any}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            onEdgesChange={onEdgesChange as any}
+            onNodesChange={onNodesChange as never}
+            onEdgesChange={onEdgesChange as never}
             onConnect={onConnect}
-            onInit={handleInit}
+            onInit={onInit}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
             nodeTypes={nodeTypes}
@@ -170,9 +173,10 @@ export function FunnelBuilder() {
               type: 'smoothstep',
               animated: false,
               markerEnd: { type: 'arrowclosed' as const },
+              style: { stroke: '#64748B', strokeWidth: 2 },
             }}
             fitView
-            fitViewOptions={{ padding: 0.2 }}
+            fitViewOptions={{ padding: 0.25 }}
             minZoom={0.1}
             maxZoom={2}
             deleteKeyCode={['Backspace', 'Delete']}
@@ -182,46 +186,45 @@ export function FunnelBuilder() {
             selectionOnDrag
             proOptions={{ hideAttribution: true }}
           >
-            {/* Grid background */}
-            <Background
-              variant={BackgroundVariant.Dots}
-              gap={20}
-              size={1}
-              color="#D1D5DB"
-            />
-
-            {/* Zoom controls */}
+            <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#cbd5e1" />
             <Controls
               showInteractive={false}
-              className="!bg-white !border !border-gray-200 !rounded-lg !shadow-md"
-              aria-label="Canvas zoom controls"
+              className="!rounded-lg !border !border-slate-200 !bg-white !shadow-sm"
+              aria-label="Zoom"
             />
-
-            {/* Mini-map */}
             <MiniMap />
           </ReactFlow>
 
-          {/* Validation Panel */}
+          {isDraggingOver && (
+            <div
+              className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-indigo-500 bg-indigo-50/50"
+              aria-hidden
+            >
+              <span className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-md">
+                Drop to add page
+              </span>
+            </div>
+          )}
+
           <ValidationPanel
             nodes={nodes}
             edges={edges}
+            open={validationOpen}
             onNodeFocus={handleNodeFocus}
           />
 
-          {/* Empty state */}
-          {nodes.length === 0 && (
+          {isEmpty && (
             <div
-              className="absolute inset-0 flex items-center justify-center pointer-events-none"
-              aria-hidden="true"
+              className="absolute inset-0 flex flex-col items-center justify-center gap-4 pointer-events-none"
+              aria-hidden
             >
-              <div className="text-center p-8 bg-white/80 rounded-xl border border-gray-200 shadow-lg max-w-md">
-                <div className="text-4xl mb-4">🚀</div>
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                  Start Building Your Funnel
-                </h2>
-                <p className="text-gray-500">
-                  Drag page types from the left sidebar onto this canvas to create your sales funnel.
-                  Connect pages by dragging between the handles.
+              <div className="max-w-sm rounded-xl border-2 border-dashed border-slate-300 bg-white/95 px-8 py-6 text-center shadow-sm">
+                <p className="text-base font-medium text-slate-700">No pages yet</p>
+                <p className="mt-2 text-sm text-slate-500">
+                  Drag a page type from the left sidebar and drop it here to start your funnel.
+                </p>
+                <p className="mt-3 text-xs text-slate-400">
+                  Pan: click + drag background. Connect: drag from ● (right) to ○ (left).
                 </p>
               </div>
             </div>
