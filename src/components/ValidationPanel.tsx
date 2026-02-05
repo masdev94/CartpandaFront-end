@@ -11,7 +11,6 @@ interface ValidationPanelProps {
   onClose?: () => void;
 }
 
-/** Satisfied rule messages when things are OK (for ✅ list) */
 function getSatisfiedMessages(nodes: FunnelNode[], edges: FunnelEdge[]): string[] {
   const out: string[] = [];
   const thankYous = nodes.filter((n) => n.data.nodeType === 'thankYou');
@@ -22,7 +21,7 @@ function getSatisfiedMessages(nodes: FunnelNode[], edges: FunnelEdge[]): string[
       out.push(`Thank You has no out edges`);
     }
   });
-  if (out.length > 1) out.length = 1; // one line is enough
+  if (out.length > 1) out.length = 1;
   return out;
 }
 

@@ -8,7 +8,6 @@ function getNodeColor(node: { type?: string }): string {
   return (nodeTypeColors[t]?.dot ?? '#64748B');
 }
 
-/** Render each minimap node as a circle (center of the node bounds, radius = half of smaller dimension) */
 function MiniMapCircleNode({ x, y, width, height, color, strokeColor, strokeWidth }: MiniMapNodeProps) {
   const radius = Math.min(width, height) / 2;
   const cx = x + width / 2;

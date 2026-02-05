@@ -13,12 +13,9 @@ function Kbd({ children }: { children: React.ReactNode }) {
 
 interface SidebarProps {
   onDragStart: (event: React.DragEvent, nodeType: FunnelNodeType) => void;
-  /** When true, render as overlay drawer (mobile). */
   isDrawer?: boolean;
   onClose?: () => void;
-  /** Tap-to-add: add node at center and close drawer (mobile). */
   onAddNode?: (nodeType: FunnelNodeType) => void;
-  /** Keyboard: add node at viewport center when Enter/Space on palette item (desktop). */
   onAddNodeAtCenter?: (nodeType: FunnelNodeType) => void;
 }
 

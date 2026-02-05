@@ -87,7 +87,6 @@ function ToolbarComponent({
       role="toolbar"
       aria-label="Funnel builder toolbar"
     >
-      {/* Left: title + undo/redo + theme + Add page (mobile) */}
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         <h1 className="min-w-0 truncate text-base font-semibold text-slate-800 dark:text-slate-100 sm:text-lg">
           Cartpanda Funnel
@@ -138,9 +137,7 @@ function ToolbarComponent({
         )}
       </div>
 
-      {/* Right: Save, Export, Import, Validation, More/Clear — aligned end, can wrap */}
       <div className="flex min-h-[44px] flex-1 flex-wrap items-center justify-end gap-2">
-        {/* Desktop: Save, Export, Import */}
         <div className="hidden items-center gap-2 md:flex">
           {onSave && (
             <button
@@ -199,7 +196,6 @@ function ToolbarComponent({
           className="hidden"
           aria-hidden
         />
-        {/* More menu: mobile only — Export, Import, Clear */}
         <div className="relative md:hidden">
           <button
             type="button"

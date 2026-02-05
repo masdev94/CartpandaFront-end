@@ -53,7 +53,7 @@ export function FunnelBuilder() {
     canRedo,
   } = useFunnelStore();
 
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [validationNotification, setValidationNotification] = useState<{ message: string; type: 'issues' | 'ok' | 'empty' } | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window === 'undefined') return 'light';
@@ -189,7 +189,7 @@ export function FunnelBuilder() {
       const targetNode = nodes.find((n) => n.id === connection.target);
       const error = isValidConnection(sourceNode, targetNode, edges);
       if (error) {
-        setToast(error);
+        setToast({ message: error, type: 'error' });
         setTimeout(() => setToast(null), 3000);
         return;
       }
@@ -203,7 +203,7 @@ export function FunnelBuilder() {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         saveFunnel();
-        setToast('Funnel saved!');
+        setToast({ message: 'Funnel saved!', type: 'success' });
         setTimeout(() => setToast(null), 2000);
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
@@ -233,7 +233,7 @@ export function FunnelBuilder() {
         onExport={getState}
         onSave={() => {
           saveFunnel();
-          setToast('Funnel saved!');
+          setToast({ message: 'Funnel saved!', type: 'success' });
           setTimeout(() => setToast(null), 2000);
         }}
         onClear={clearCanvas}
@@ -285,6 +285,8 @@ export function FunnelBuilder() {
             onEdgesChange={onEdgesChange as never}
             onConnect={handleConnect}
             isValidConnection={isValidConnectionForFlow}
+            nodesConnectable
+            elementsSelectable
             onInit={onInit}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
@@ -295,6 +297,7 @@ export function FunnelBuilder() {
               markerEnd: { type: 'arrowclosed' as const },
               style: { stroke: '#64748B', strokeWidth: 2 },
             }}
+            connectionLineStyle={{ stroke: '#6366f1', strokeWidth: 2 }}
             fitView
             fitViewOptions={{ padding: 0.25 }}
             minZoom={0.1}
@@ -302,6 +305,8 @@ export function FunnelBuilder() {
             deleteKeyCode={['Backspace', 'Delete']}
             selectionKeyCode={['Shift']}
             multiSelectionKeyCode={['Control', 'Meta']}
+            snapToGrid
+            snapGrid={[20, 20]}
             panOnScroll={false}
             zoomOnScroll
             selectionOnDrag
@@ -363,18 +368,15 @@ export function FunnelBuilder() {
         </main>
       </div>
 
-      {/* Toast notification (e.g. after Save or Ctrl+S) */}
       {toast && (
         <div
-          className="fixed top-4 right-4 z-50 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-medium text-white shadow-lg"
+          className={`fixed top-4 right-4 z-50 rounded-lg px-4 py-3 text-sm font-medium text-white shadow-lg ${toast.type === 'error' ? 'bg-amber-600' : 'bg-emerald-600'}`}
           role="status"
-          aria-live="polite"
+          aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
         >
-          {toast}
+          {toast.message}
         </div>
       )}
-
-      {/* Validation notification: top-center, auto-close after 3s */}
       {validationNotification && (
         <div
           className="fixed left-1/2 top-4 z-50 flex -translate-x-1/2 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-800 shadow-lg dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"

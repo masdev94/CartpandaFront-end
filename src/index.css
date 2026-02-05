@@ -1,9 +1,6 @@
 @import "tailwindcss";
-
-/* Class-based dark mode (toggle on <html>) */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Mobile-first base */
 :root {
   font-family: 'Inter', system-ui, sans-serif;
   line-height: 1.5;
@@ -48,17 +45,9 @@ body {
   height: 100dvh;
 }
 
-/* Funnel layout: main container (sidebar + canvas) and canvas area */
-.funnel-container {
-  /* Adjust padding or max-width here if you want a boxed layout */
-  /* max-width: 1600px; margin: 0 auto; */
-}
-.funnel-canvas {
-  /* Canvas fills remaining space; add padding here if needed */
-  /* padding: 1rem; */
-}
+.funnel-container {}
+.funnel-canvas {}
 
-/* React Flow */
 .react-flow__node {
   cursor: grab;
 }
@@ -109,17 +98,13 @@ body {
   bottom: 1rem !important;
   right: 1rem !important;
 }
-/* Transparent so the grid Background fills the entire canvas */
 .react-flow__pane {
   background-color: transparent;
 }
-
-/* Grid line color: visible in light mode, subtle in dark */
 .react-flow__background .react-flow__background-pattern {
   stroke: var(--grid-line);
 }
 
-/* React Flow v12 color scheme: dark mode (colorMode="dark") */
 .react-flow.dark {
   --xy-background-pattern-line-color-default: #94a3b8;
   --xy-background-pattern-dots-color-default: #94a3b8;

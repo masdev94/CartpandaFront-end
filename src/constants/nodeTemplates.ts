@@ -8,7 +8,6 @@ import {
 } from 'react-icons/hi2';
 import type { NodeTemplate, FunnelNodeType } from '../types';
 
-// React Icon components per node type (used by FunnelNode and Sidebar)
 export const NODE_ICON_COMPONENTS: Record<FunnelNodeType, ComponentType<{ className?: string }>> = {
   salesPage: HiOutlineDocumentText,
   orderPage: HiOutlineShoppingCart,
@@ -17,7 +16,6 @@ export const NODE_ICON_COMPONENTS: Record<FunnelNodeType, ComponentType<{ classN
   thankYou: HiOutlineCheckCircle,
 };
 
-// Tailwind classes for each node type (used by FunnelNode and Sidebar)
 export const NODE_COLORS: Record<FunnelNodeType, { bg: string; border: string; text: string; btn: string }> = {
   salesPage: {
     bg: 'bg-[#EFF6FF]',

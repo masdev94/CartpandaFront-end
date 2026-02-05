@@ -13,33 +13,27 @@ import { DEFAULT_LABELS, DEFAULT_BUTTON_LABELS } from '../constants/nodeTemplate
 import { saveFunnelToStorage, loadFunnelFromStorage } from '../utils/storage';
 import { isValidConnection } from '../utils/validation';
 
-// Track indices for auto-incrementing labels
 interface NodeCounters {
   upsell: number;
   downsell: number;
 }
 
 export function useFunnelStore() {
-  // Use generic Node and Edge types to avoid type conflicts with React Flow
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<FunnelNodeData>>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   
-  // Track counters for auto-incrementing labels
   const countersRef = useRef<NodeCounters>({ upsell: 0, downsell: 0 });
   
-  // Undo/Redo history
   const [history, setHistory] = useState<FunnelState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const isUndoRedoRef = useRef(false);
   
-  // Load from localStorage on mount
   useEffect(() => {
     const saved = loadFunnelFromStorage();
     if (saved && saved.nodes.length > 0) {
       setNodes(saved.nodes);
       setEdges(saved.edges);
       
-      // Restore counters from existing nodes
       saved.nodes.forEach(node => {
         if (node.data.nodeType === 'upsell' && node.data.index) {
           countersRef.current.upsell = Math.max(countersRef.current.upsell, node.data.index);
@@ -49,25 +43,20 @@ export function useFunnelStore() {
         }
       });
       
-      // Initialize history
       setHistory([saved]);
       setHistoryIndex(0);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
-  // Save to localStorage when state changes
   useEffect(() => {
     if (nodes.length > 0 || edges.length > 0) {
       const state: FunnelState = { nodes, edges };
       saveFunnelToStorage(state);
       
-      // Add to history (but not during undo/redo)
       if (!isUndoRedoRef.current) {
         setHistory(prev => {
           const newHistory = prev.slice(0, historyIndex + 1);
           newHistory.push(state);
-          // Limit history size
           if (newHistory.length > 50) {
             newHistory.shift();
             return newHistory;
@@ -80,7 +69,6 @@ export function useFunnelStore() {
     }
   }, [nodes, edges, historyIndex]);
   
-  // Generate label with auto-increment for upsells and downsells
   const generateLabel = useCallback((nodeType: FunnelNodeType): { label: string; index?: number } => {
     if (nodeType === 'upsell') {
       countersRef.current.upsell++;
@@ -93,7 +81,6 @@ export function useFunnelStore() {
     return { label: DEFAULT_LABELS[nodeType] };
   }, []);
   
-  // Add a new node to the canvas
   const addNode = useCallback((nodeType: FunnelNodeType, position: { x: number; y: number }) => {
     const { label, index } = generateLabel(nodeType);
     
@@ -113,14 +100,12 @@ export function useFunnelStore() {
     return newNode;
   }, [generateLabel, setNodes]);
   
-  // Handle new connections
   const onConnect = useCallback((connection: Connection) => {
     const sourceNode = nodes.find(n => n.id === connection.source);
     const targetNode = nodes.find(n => n.id === connection.target);
     
     const error = isValidConnection(sourceNode, targetNode, edges);
     if (error) {
-      // Could show a toast here, but for now just prevent the connection
       console.warn('Invalid connection:', error);
       return;
     }
@@ -133,33 +118,26 @@ export function useFunnelStore() {
     }, eds));
   }, [nodes, edges, setEdges]);
   
-  // Handle node changes - just pass through the onNodesChange from React Flow
-  // Handle edge changes - just pass through the onEdgesChange from React Flow
   
-  // Delete a node
   const deleteNode = useCallback((nodeId: string) => {
     setNodes((nds) => nds.filter((n) => n.id !== nodeId));
     setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
   }, [setNodes, setEdges]);
-  
-  // Delete an edge
+
   const deleteEdge = useCallback((edgeId: string) => {
     setEdges((eds) => eds.filter((e) => e.id !== edgeId));
   }, [setEdges]);
   
-  // Clear all nodes and edges
   const clearCanvas = useCallback(() => {
     setNodes([]);
     setEdges([]);
     countersRef.current = { upsell: 0, downsell: 0 };
   }, [setNodes, setEdges]);
   
-  // Load state from imported JSON
   const loadState = useCallback((state: FunnelState) => {
     setNodes(state.nodes);
     setEdges(state.edges);
     
-    // Restore counters
     countersRef.current = { upsell: 0, downsell: 0 };
     state.nodes.forEach(node => {
       if (node.data.nodeType === 'upsell' && node.data.index) {
@@ -171,18 +149,15 @@ export function useFunnelStore() {
     });
   }, [setNodes, setEdges]);
   
-  // Get current state for export
   const getState = useCallback((): FunnelState => {
     return { nodes, edges };
   }, [nodes, edges]);
 
-  // Explicit save to localStorage (for Save button and Ctrl+S)
   const saveFunnel = useCallback(() => {
     const state: FunnelState = { nodes, edges };
     saveFunnelToStorage(state);
   }, [nodes, edges]);
 
-  // Undo
   const undo = useCallback(() => {
     if (historyIndex > 0) {
       isUndoRedoRef.current = true;
@@ -193,7 +168,6 @@ export function useFunnelStore() {
     }
   }, [history, historyIndex, setNodes, setEdges]);
   
-  // Redo
   const redo = useCallback(() => {
     if (historyIndex < history.length - 1) {
       isUndoRedoRef.current = true;
@@ -204,7 +178,6 @@ export function useFunnelStore() {
     }
   }, [history, historyIndex, setNodes, setEdges]);
   
-  // Check if undo/redo is available
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
   
