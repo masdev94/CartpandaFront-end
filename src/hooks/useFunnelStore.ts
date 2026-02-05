@@ -21,19 +21,16 @@ interface NodeCounters {
 export function useFunnelStore() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<FunnelNodeData>>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-  
   const countersRef = useRef<NodeCounters>({ upsell: 0, downsell: 0 });
-  
+
   const [history, setHistory] = useState<FunnelState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const isUndoRedoRef = useRef(false);
-  
   useEffect(() => {
     const saved = loadFunnelFromStorage();
     if (saved && saved.nodes.length > 0) {
       setNodes(saved.nodes);
       setEdges(saved.edges);
-      
       saved.nodes.forEach(node => {
         if (node.data.nodeType === 'upsell' && node.data.index) {
           countersRef.current.upsell = Math.max(countersRef.current.upsell, node.data.index);
@@ -42,25 +39,20 @@ export function useFunnelStore() {
           countersRef.current.downsell = Math.max(countersRef.current.downsell, node.data.index);
         }
       });
-      
       setHistory([saved]);
       setHistoryIndex(0);
     }
   }, []);
-  
+
   useEffect(() => {
     if (nodes.length > 0 || edges.length > 0) {
       const state: FunnelState = { nodes, edges };
       saveFunnelToStorage(state);
-      
       if (!isUndoRedoRef.current) {
         setHistory(prev => {
           const newHistory = prev.slice(0, historyIndex + 1);
           newHistory.push(state);
-          if (newHistory.length > 50) {
-            newHistory.shift();
-            return newHistory;
-          }
+          if (newHistory.length > 50) newHistory.shift();
           return newHistory;
         });
         setHistoryIndex(prev => Math.min(prev + 1, 49));
@@ -68,7 +60,7 @@ export function useFunnelStore() {
       isUndoRedoRef.current = false;
     }
   }, [nodes, edges, historyIndex]);
-  
+
   const generateLabel = useCallback((nodeType: FunnelNodeType): { label: string; index?: number } => {
     if (nodeType === 'upsell') {
       countersRef.current.upsell++;
@@ -80,10 +72,9 @@ export function useFunnelStore() {
     }
     return { label: DEFAULT_LABELS[nodeType] };
   }, []);
-  
+
   const addNode = useCallback((nodeType: FunnelNodeType, position: { x: number; y: number }) => {
     const { label, index } = generateLabel(nodeType);
-    
     const newNode: FunnelNode = {
       id: nanoid(),
       type: nodeType,
@@ -95,21 +86,18 @@ export function useFunnelStore() {
         index,
       },
     };
-    
     setNodes((nds) => [...nds, newNode]);
     return newNode;
   }, [generateLabel, setNodes]);
-  
+
   const onConnect = useCallback((connection: Connection) => {
     const sourceNode = nodes.find(n => n.id === connection.source);
     const targetNode = nodes.find(n => n.id === connection.target);
-    
     const error = isValidConnection(sourceNode, targetNode, edges);
     if (error) {
       console.warn('Invalid connection:', error);
       return;
     }
-    
     setEdges((eds) => addEdge({
       ...connection,
       type: 'smoothstep',
@@ -117,8 +105,7 @@ export function useFunnelStore() {
       markerEnd: { type: 'arrowclosed' as const },
     }, eds));
   }, [nodes, edges, setEdges]);
-  
-  
+
   const deleteNode = useCallback((nodeId: string) => {
     setNodes((nds) => nds.filter((n) => n.id !== nodeId));
     setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
@@ -127,17 +114,16 @@ export function useFunnelStore() {
   const deleteEdge = useCallback((edgeId: string) => {
     setEdges((eds) => eds.filter((e) => e.id !== edgeId));
   }, [setEdges]);
-  
+
   const clearCanvas = useCallback(() => {
     setNodes([]);
     setEdges([]);
     countersRef.current = { upsell: 0, downsell: 0 };
   }, [setNodes, setEdges]);
-  
+
   const loadState = useCallback((state: FunnelState) => {
     setNodes(state.nodes);
     setEdges(state.edges);
-    
     countersRef.current = { upsell: 0, downsell: 0 };
     state.nodes.forEach(node => {
       if (node.data.nodeType === 'upsell' && node.data.index) {
@@ -148,7 +134,7 @@ export function useFunnelStore() {
       }
     });
   }, [setNodes, setEdges]);
-  
+
   const getState = useCallback((): FunnelState => {
     return { nodes, edges };
   }, [nodes, edges]);
@@ -167,7 +153,7 @@ export function useFunnelStore() {
       setHistoryIndex(historyIndex - 1);
     }
   }, [history, historyIndex, setNodes, setEdges]);
-  
+
   const redo = useCallback(() => {
     if (historyIndex < history.length - 1) {
       isUndoRedoRef.current = true;
@@ -177,10 +163,10 @@ export function useFunnelStore() {
       setHistoryIndex(historyIndex + 1);
     }
   }, [history, historyIndex, setNodes, setEdges]);
-  
+
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
-  
+
   return {
     nodes: nodes as FunnelNode[],
     edges: edges as FunnelEdge[],

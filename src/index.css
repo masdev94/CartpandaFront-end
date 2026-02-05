@@ -45,9 +45,6 @@ body {
   height: 100dvh;
 }
 
-.funnel-container {}
-.funnel-canvas {}
-
 .react-flow__node {
   cursor: grab;
 }
