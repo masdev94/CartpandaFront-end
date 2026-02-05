@@ -20,7 +20,7 @@ function FunnelNodeComponent({ data, selected }: Props) {
   return (
     <div
       className={`
-        relative w-[220px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md
+        relative w-[220px] overflow-visible rounded-xl border border-slate-200 bg-white shadow-md
         transition-all duration-200 ease-out
         dark:border-slate-600 dark:bg-slate-800
         ${selected ? 'ring-2 ring-indigo-500 ring-offset-2 shadow-lg dark:ring-offset-slate-900' : 'hover:shadow-lg'}
@@ -29,22 +29,12 @@ function FunnelNodeComponent({ data, selected }: Props) {
       aria-label={`${data.label} page`}
       tabIndex={0}
     >
-      {/* Accent bar by type (same color as border) */}
-      <div className={`h-1 w-full rounded-t-xl ${colors.border.replace('border-', 'bg-')}`} aria-hidden />
+      {/* Inner clip so only the card body is rounded; handles stay visible (outer is overflow-visible). */}
+      <div className="overflow-hidden rounded-xl">
+        <div className={`h-1 w-full rounded-t-xl ${colors.border.replace('border-', 'bg-')}`} aria-hidden />
 
-      {/* Incoming: left ○ — Sales Page is entry point (no input handle) */}
-      {!isSalesPage && (
-        <Handle
-          type="target"
-          position={Position.Left}
-          id="target"
-          className="!left-0 !top-1/2 !h-11 !w-11 !-translate-y-1/2 !rounded-full !border-2 !border-white !bg-slate-400 hover:!bg-indigo-500 dark:!border-slate-700 dark:!bg-slate-500 md:!h-3 md:!w-3"
-          aria-label="Incoming connection"
-        />
-      )}
-
-      <div className="p-3 pt-2.5">
-        {/* Title row: icon badge + label + optional warning */}
+        <div className="p-3 pt-2.5">
+          {/* Title row: icon badge + label + optional warning */}
         <div className="mb-3 flex items-center gap-2.5">
           <span
             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border ${colors.bg} ${colors.border} dark:bg-slate-700 dark:border-slate-600`}
@@ -77,7 +67,19 @@ function FunnelNodeComponent({ data, selected }: Props) {
         >
           {data.buttonLabel}
         </button>
+        </div>
       </div>
+
+      {/* Incoming: left ○ — Sales Page is entry point (no input handle) */}
+      {!isSalesPage && (
+        <Handle
+          type="target"
+          position={Position.Left}
+          id="target"
+          className="!left-0 !top-1/2 !h-11 !w-11 !-translate-y-1/2 !rounded-full !border-2 !border-white !bg-slate-400 hover:!bg-indigo-500 dark:!border-slate-700 dark:!bg-slate-500 md:!h-3 md:!w-3"
+          aria-label="Incoming connection"
+        />
+      )}
 
       {/* Outgoing: right ● — larger touch target on mobile */}
       {!isThankYou && (
