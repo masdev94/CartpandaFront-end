@@ -1,8 +1,10 @@
 # Cartpanda Funnel Builder
 
-Drag-and-drop upsell funnel builder (visual only). No login or backend.
+**Short description:** A visual funnel builder where you design upsell/downsell flows by dragging nodes onto a canvas and connecting them. Built with React, React Flow, and Tailwind. Funnels auto-save to the browser; no backend or login. Includes undo/redo, validation rules, theme toggle, and export/import.
 
 ---
+
+## Submit checklist
 
 ## Submit checklist
 

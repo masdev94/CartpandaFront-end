@@ -29,6 +29,8 @@ const nodeTypes = {
   thankYou: FunnelNode,
 };
 
+const VALID_NODE_TYPES: FunnelNodeType[] = ['salesPage', 'orderPage', 'upsell', 'downsell', 'thankYou'];
+
 export function FunnelBuilder() {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const flowRef = useRef<ReactFlowInstance | null>(null);
@@ -133,15 +135,21 @@ export function FunnelBuilder() {
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
+      e.stopPropagation();
       setIsDraggingOver(false);
-      const nodeType = e.dataTransfer.getData('application/reactflow') as FunnelNodeType;
-      if (!nodeType || !flowRef.current || !wrapperRef.current) return;
-      const bounds = wrapperRef.current.getBoundingClientRect();
-      const position = flowRef.current.screenToFlowPosition({
-        x: e.clientX - bounds.left,
-        y: e.clientY - bounds.top,
-      });
-      addNode(nodeType, position);
+      const rawType = e.dataTransfer.getData('application/reactflow');
+      const nodeType = VALID_NODE_TYPES.includes(rawType as FunnelNodeType) ? (rawType as FunnelNodeType) : null;
+      if (!nodeType || !flowRef.current) return;
+      let position: { x: number; y: number };
+      try {
+        position = flowRef.current.screenToFlowPosition({ x: e.clientX, y: e.clientY });
+      } catch {
+        return;
+      }
+      if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) return;
+      const x = position.x;
+      const y = position.y;
+      setTimeout(() => addNode(nodeType, { x, y }), 0);
     },
     [addNode]
   );
@@ -276,6 +284,7 @@ export function FunnelBuilder() {
           aria-label="Funnel canvas"
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         >
           <ReactFlow
             colorMode={theme}
@@ -289,7 +298,6 @@ export function FunnelBuilder() {
             elementsSelectable
             onInit={onInit}
             onDragOver={handleDragOver}
-            onDrop={handleDrop}
             nodeTypes={nodeTypes}
             defaultEdgeOptions={{
               type: 'smoothstep',
