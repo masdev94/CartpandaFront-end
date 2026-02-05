@@ -68,7 +68,6 @@ export function FunnelBuilder() {
   const issues = useMemo(() => validateFunnel(nodes, edges), [nodes, edges]);
   const prevIssuesLengthRef = useRef(0);
 
-  /* Show notification when Validation panel is opened: summary at top-center + panel shows details (same time) */
   useEffect(() => {
     if (!validationOpen) {
       setValidationNotification(null);
@@ -85,13 +84,12 @@ export function FunnelBuilder() {
     return () => clearTimeout(t);
   }, [validationOpen]);
 
-  /* Show notification when issues first appear (initial issues), so user sees summary without opening panel */
   useEffect(() => {
     if (issues.length === 0) {
       prevIssuesLengthRef.current = 0;
       return;
     }
-    if (prevIssuesLengthRef.current > 0) return; // already had issues, don't re-notify on every change
+    if (prevIssuesLengthRef.current > 0) return;
     prevIssuesLengthRef.current = issues.length;
     setValidationNotification({
       message: `${issues.length} validation issue(s) found — click Validation for details`,
@@ -152,7 +150,6 @@ export function FunnelBuilder() {
     flowRef.current = instance;
   }, []);
 
-  /** Add node at viewport center (for mobile tap-to-add). */
   const addNodeAtCenter = useCallback(
     (nodeType: FunnelNodeType) => {
       if (!flowRef.current || !wrapperRef.current) return;
@@ -177,7 +174,6 @@ export function FunnelBuilder() {
     }
   }, [nodes]);
 
-  /** React Flow uses this to show valid/invalid drop targets while dragging a connection. */
   const isValidConnectionForFlow = useCallback(
     (connection: Connection | Edge) => {
       const sourceNode = nodes.find((n) => n.id === connection.source);
@@ -187,7 +183,6 @@ export function FunnelBuilder() {
     [nodes, edges]
   );
 
-  /** Wrap store onConnect: show toast when connection is invalid, then call store when valid. */
   const handleConnect = useCallback(
     (connection: Connection) => {
       const sourceNode = nodes.find((n) => n.id === connection.source);
@@ -252,9 +247,7 @@ export function FunnelBuilder() {
         onOpenPalette={() => setPaletteDrawerOpen(true)}
       />
 
-      {/* Main container: sidebar + canvas; min-h-0 lets flex child shrink so overflow works */}
       <div className="funnel-container relative flex min-h-0 flex-1 flex-row overflow-hidden">
-        {/* Click-outside backdrop: closes Validation panel when clicking canvas/sidebar */}
         {validationOpen && (
           <button
             type="button"
