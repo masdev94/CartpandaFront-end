@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Class-based dark mode (toggle on <html>) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Mobile-first base */
 :root {
   font-family: 'Inter', system-ui, sans-serif;
   line-height: 1.5;
@@ -11,14 +15,35 @@
   --canvas-bg: #F8FAFC;
 }
 
+.dark {
+  --canvas-bg: #1E293B;
+  --text-primary: #F1F5F9;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --surface: #1E293B;
+  --surface-elevated: #334155;
+  --border: #475569;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   color: #0F172A;
+  touch-action: manipulation;
+}
+
+.dark body {
+  color: var(--text-primary);
 }
 
 #root {
   height: 100vh;
+  height: 100dvh;
 }
 
 /* React Flow */
@@ -31,6 +56,9 @@ body {
 .react-flow__edge-path {
   stroke: #64748B;
   stroke-width: 2;
+}
+.dark .react-flow__edge-path {
+  stroke: #94A3B8;
 }
 .react-flow__edge.selected .react-flow__edge-path {
   stroke: var(--accent);
@@ -54,9 +82,35 @@ body {
 .react-flow__controls-button:hover {
   background-color: #F1F5F9 !important;
 }
+.dark .react-flow__controls-button {
+  border-bottom-color: #475569 !important;
+  color: #E2E8F0 !important;
+}
+.dark .react-flow__controls-button:last-child {
+  border-bottom: none !important;
+}
+.dark .react-flow__controls-button:hover {
+  background-color: #334155 !important;
+  color: #F1F5F9 !important;
+}
 .react-flow__minimap {
   bottom: 1rem !important;
   right: 1rem !important;
+}
+.react-flow__pane {
+  background-color: var(--canvas-bg);
+}
+
+@media (max-width: 767px) {
+  .react-flow__minimap {
+    bottom: 0.5rem !important;
+    right: 0.5rem !important;
+    width: 80px !important;
+    height: 60px !important;
+  }
+  .react-flow__controls {
+    bottom: 4rem !important;
+  }
 }
 
 *:focus-visible {

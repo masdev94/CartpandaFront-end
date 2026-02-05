@@ -76,8 +76,36 @@ export function validateFunnel(nodes: ValidatableNode[], edges: (FunnelEdge | Ed
       });
     }
   });
-  
+
+  // Rule 4: Multiple starting points (multiple Sales Pages with no incoming edges)
+  const salesPages = nodes.filter((n) => n.data.nodeType === 'salesPage');
+  if (salesPages.length > 1) {
+    const salesPagesWithNoIncoming = salesPages.filter(
+      (sp) => (incomingEdges.get(sp.id) || []).length === 0
+    );
+    if (salesPagesWithNoIncoming.length > 0) {
+      issues.push({
+        id: 'multiple-starting-points',
+        type: 'warning',
+        message: 'Multiple starting points detected. Consider having only one Sales Page as entry.',
+      });
+    }
+  }
+
   return issues;
+}
+
+/**
+ * Returns validation status for a node (for UI badges).
+ */
+export function getNodeValidationStatus(
+  nodeId: string,
+  issues: ValidationIssue[]
+): 'valid' | 'warning' | 'error' {
+  const nodeIssues = issues.filter((i) => i.nodeId === nodeId);
+  if (nodeIssues.some((i) => i.type === 'error')) return 'error';
+  if (nodeIssues.some((i) => i.type === 'warning')) return 'warning';
+  return 'valid';
 }
 
 /**

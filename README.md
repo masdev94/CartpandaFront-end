@@ -1,207 +1,171 @@
-# Cartpanda Funnel Builder
+# Cartpanda Funnel Builder — Front-end Practical Test
 
-A visual drag-and-drop funnel builder for creating sales funnels. Built as part of the Cartpanda Front-end Engineer Practical Test.
+A **drag-and-drop upsell funnel builder** (visual editor only). No login, no backend — just the canvas, palette, and persistence as specified.
 
-![Funnel Builder Screenshot](https://via.placeholder.com/800x450?text=Funnel+Builder+Preview)
+---
 
-## Live Demo
+## What you must submit (required) — Checklist
 
-🔗 **[View Live Demo](#)** *(Deploy URL will be added after deployment)*
+| Requirement | Status |
+|-------------|--------|
+| **Public demo URL** (no login) | Deploy to Vercel/Netlify (see [Deploy](#deploy-for-public-url) below), then add the URL here. |
+| **GitHub repository** (with commit history) | Push this project to a new repo; keep meaningful commits. |
+| **README** (setup + architecture + accessibility) | This file. |
+| **Written dashboard answer** | [docs/dashboard-architecture.md](docs/dashboard-architecture.md) |
 
-## Features
+---
 
-### Core Features (MVP)
-- ✅ **Infinite Canvas** - Pan and zoom to navigate your funnel
-- ✅ **Draggable Nodes** - Drag page types from the palette onto the canvas
-- ✅ **5 Node Types** - Sales Page, Order Page, Upsell, Downsell, Thank You
-- ✅ **Visual Connections** - Connect nodes with animated arrow edges
-- ✅ **Auto-incrementing Labels** - Upsell 1, Upsell 2, etc.
-- ✅ **Funnel Validation** - Real-time validation with error/warning indicators
-- ✅ **Persistence** - Auto-saves to localStorage
-- ✅ **Export/Import** - Download and upload funnel JSON files
+## How to run locally
 
-### Bonus Features
-- ✅ **Zoom Controls** - Zoom in/out with scroll wheel or buttons
-- ✅ **Mini-map** - Bird's-eye view of the entire canvas
-- ✅ **Undo/Redo** - Ctrl+Z / Ctrl+Shift+Z keyboard shortcuts
-- ✅ **Node/Edge Deletion** - Delete with Backspace or Delete key
-- ✅ **Validation Panel** - Shows orphan nodes, invalid connections
-- ✅ **Grid Background** - Dotted grid for visual alignment
-
-## Quick Start
-
-### Prerequisites
-- Node.js 18+ 
-- npm 9+ (or pnpm/yarn)
-
-### Installation
+**Prerequisites:** Node.js 18+, npm (or pnpm/yarn).
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/cartpanda-funnel-builder.git
+# Clone (or use this folder)
+git clone <your-repo-url>
 cd cartpanda-funnel-builder
 
-# Install dependencies
+# Install
 npm install
 
-# Start development server
+# Run
 npm run dev
 ```
 
-The app will open at `http://localhost:5173`
+Open **http://localhost:5173**. No env vars or login required.
 
-### Build for Production
+**Production build:**
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## Project Structure
+---
+
+## Deploy for public URL
+
+- **Vercel:** Connect the GitHub repo; use default settings (Vite is detected). Or from CLI: `npx vercel`.
+- **Netlify:** Connect the repo; build command `npm run build`, publish directory `dist`.
+- **Cloudflare Pages:** Build command `npm run build`, output directory `dist`.
+
+After deploy, put the live URL in the “Public demo URL” row above (and in your application).
+
+---
+
+## Main architecture decisions
+
+1. **React Flow (@xyflow/react)** — Canvas, pan/zoom, minimap, connections. Keeps graph logic and edge handling out of our code; TypeScript support and accessibility are good. Tradeoff: extra bundle size for a focused editor.
+
+2. **Single custom hook (`useFunnelStore`)** — All funnel state (nodes, edges, undo/redo, persistence) lives in one place. Uses React Flow’s `useNodesState` / `useEdgesState` and React state. No Redux/Zustand for scope and simplicity. Easy to swap to a global store later if needed.
+
+3. **Tailwind CSS** — Utility-first styling, design tokens in `src/theme.ts`, consistent spacing and colors. Fast to iterate and keep the UI consistent.
+
+4. **Validation as derived state** — Validation runs on current nodes/edges and is shown in a top-right panel (and as ⚠️ on nodes). No separate “validation service”; rules live in `src/utils/validation.ts` and are easy to extend.
+
+5. **Persistence** — Auto-save to `localStorage`; Export/Import JSON for backup and portability. No backend required by the brief.
+
+---
+
+## Tradeoffs / what I’d improve next
+
+- **Undo/redo** — Implemented in the hook with a history stack. For a larger app I’d use a dedicated library (e.g. `use-undo` or command pattern) and possibly persist history.
+- **Snap to grid** — Not implemented. Tradeoff: ship MVP first; add later via React Flow options if needed.
+- **Click-to-place (accessibility)** — Drag-from-palette is mouse/touch only. I’d add “click palette item, then click on canvas to place” for keyboard and AT users.
+- **Mobile** — Layout works; touch drag/drop and small-screen palette could be refined (e.g. bottom sheet for palette).
+- **Real backend** — If the product grows, I’d add a small API and sync funnel state there while keeping Export/Import as a fallback.
+
+---
+
+## Accessibility notes
+
+- **Semantic structure:** `<main>`, `<aside>`, `<header>`, `role="toolbar"`, `role="application"` where appropriate; skip link to main canvas.
+- **Keyboard:** Tab through toolbar and palette; Enter/Space to activate. Undo/Redo via Ctrl+Z / Ctrl+Shift+Z. Delete/Backspace removes selected nodes/edges.
+- **Focus:** Visible focus rings (e.g. `focus:ring-2`); no focus traps.
+- **Labels:** `aria-label` on controls (e.g. “Validation”, “Export”, “Incoming connection”, “Outgoing connection”).
+- **Contrast:** Text and UI use colors that meet WCAG AA where used.
+- **Reduced motion:** `prefers-reduced-motion` respected in global CSS (animations/transitions minimized).
+- **Limitations:** Drag-from-palette is pointer-based; canvas pan/zoom and connection handles are best with pointer. Improving this would mean adding click-to-place and possibly more keyboard shortcuts for connection creation.
+
+---
+
+## Requirements coverage (Part 1 — Build)
+
+**MVP:** Canvas (pan, grid, draggable nodes) ✅ · All 5 node types with title, thumbnail, button label ✅ · Palette drag-to-canvas ✅ · Connections with arrows and handles ✅ · Thank You no outgoing; Sales Page one-outgoing warning; auto-increment labels ✅ · localStorage + Export/Import JSON ✅  
+
+**Bonus:** Zoom ✅ · Mini-map ✅ · Undo/redo ✅ · Node/edge deletion ✅ · Validation panel (orphans, rules) ✅  
+
+(Snap to grid not implemented; tradeoff noted above.)
+
+---
+
+## Funnel rules (implemented)
+
+- **Thank You** — No outgoing edges (handle hidden).
+- **Sales Page** — Allowed to have any connections; validation **warns** if it doesn’t have exactly one outgoing edge (e.g. to Order Page).
+- **Orphan nodes** — Flagged in the validation panel when a node has no connections (and there is more than one node).
+- **Upsell / Downsell labels** — Auto-increment (Upsell 1, Upsell 2, …; Downsell 1, …) when adding from the palette.
+- **Connections** — One connection per (source, target); no self-loops; Thank You cannot be a source.
+
+---
+
+## Project structure
 
 ```
 src/
-├── components/           # React components
-│   ├── FunnelBuilder.tsx # Main application component
-│   ├── FunnelNode.tsx    # Custom node component
-│   ├── Sidebar.tsx       # Draggable palette
-│   ├── Toolbar.tsx       # Action buttons
-│   ├── ValidationPanel.tsx # Validation display
-│   └── MiniMap.tsx       # Canvas mini-map
+├── components/          # UI
+│   ├── FunnelBuilder.tsx
+│   ├── FunnelNode.tsx
+│   ├── Sidebar.tsx
+│   ├── Toolbar.tsx
+│   ├── ValidationPanel.tsx
+│   └── MiniMap.tsx
 ├── hooks/
-│   └── useFunnelStore.ts # Central state management
+│   └── useFunnelStore.ts
 ├── types/
-│   └── index.ts          # TypeScript interfaces
+│   └── index.ts
 ├── constants/
-│   └── nodeTemplates.ts  # Node configurations
+│   └── nodeTemplates.ts
 ├── utils/
-│   ├── validation.ts     # Funnel validation logic
-│   └── storage.ts        # localStorage & JSON export
-└── App.tsx               # Application entry
+│   ├── validation.ts
+│   └── storage.ts
+├── theme.ts
+├── App.tsx
+├── main.tsx
+└── index.css
 ```
 
-## Architecture Decisions
+---
 
-### 1. React Flow (@xyflow/react)
-**Choice:** Used React Flow v12 for the canvas and graph functionality.
+## Tech stack
 
-**Rationale:**
-- Battle-tested library with excellent TypeScript support
-- Built-in pan/zoom, minimap, controls
-- Performant with virtualization for large graphs
-- Accessible by default (keyboard navigation)
-- Rich ecosystem and documentation
+- React 19, TypeScript, Vite 7  
+- @xyflow/react (React Flow v12)  
+- Tailwind CSS v4  
+- nanoid (node ids)
 
-**Tradeoff:** Adds ~50KB to bundle. For this use case, the DX and feature set justify the size.
-
-### 2. State Management
-**Choice:** Custom hook (`useFunnelStore`) with React's built-in state + React Flow's hooks.
-
-**Rationale:**
-- No need for external state libraries (Redux, Zustand) for this scope
-- React Flow provides `useNodesState` and `useEdgesState` optimized for graph operations
-- Single source of truth in one hook
-- Easy to extend if needed (could migrate to Zustand/Redux later)
-
-**Tradeoff:** Undo/redo is custom-built. For a production app, might use a library like `use-undo`.
-
-### 3. Styling: Tailwind CSS v4
-**Choice:** Tailwind with the new v4 CSS-first approach.
-
-**Rationale:**
-- Rapid prototyping with utility classes
-- No CSS file management
-- Consistent spacing, colors, typography
-- Tree-shaking removes unused styles
-- Great accessibility utilities (focus rings, etc.)
-
-### 4. Validation Strategy
-**Choice:** Declarative validation that runs on state change, displayed in a panel.
-
-**Rationale:**
-- Non-blocking UX (allows invalid states, just warns)
-- Clear feedback without modal interruptions
-- Easy to extend with new rules
-- Clickable issues for navigation
-
-### 5. Persistence
-**Choice:** localStorage for auto-save, JSON export for portability.
-
-**Rationale:**
-- No backend required (as per requirements)
-- Instant persistence without user action
-- Export enables sharing and backup
-- Import enables collaboration/templates
-
-## Funnel Rules Implemented
-
-1. **Thank You pages** cannot have outgoing connections (terminal node)
-2. **Sales Pages** should connect to one Order Page (warning if missing/multiple)
-3. **Orphan nodes** are flagged (nodes with no connections)
-4. **Duplicate connections** are prevented
-5. **Self-connections** are prevented
-
-## Accessibility (WCAG)
-
-### Implemented
-- ✅ Semantic HTML (`<main>`, `<aside>`, `<header>`, `role` attributes)
-- ✅ Keyboard navigation (Tab through palette, Enter/Space to interact)
-- ✅ Focus indicators (visible focus rings on all interactive elements)
-- ✅ Screen reader labels (`aria-label` on buttons, regions, controls)
-- ✅ Color contrast (text meets WCAG AA standards)
-- ✅ Reduced motion support (`prefers-reduced-motion` media query)
-- ✅ High contrast mode support
-- ✅ Skip link for keyboard users
-
-### Accessibility Limitations
-- Drag-and-drop requires mouse; keyboard users need alternative (could add click-to-place)
-- Canvas interactions are partially accessible via React Flow's built-in support
-- Screen reader announcements for state changes could be enhanced with ARIA live regions
-
-## What I'd Improve Next
-
-### Short-term
-1. **Click-to-place mode** - Accessibility alternative to drag-and-drop
-2. **Node editing** - Edit labels, button text inline
-3. **Edge labels** - Show "Yes/No" for conditional paths
-4. **Snap to grid** - Alignment when dragging nodes
-5. **Better mobile support** - Touch gestures, responsive sidebar
-
-### Medium-term
-1. **Templates** - Pre-built funnel templates
-2. **Theming** - Light/dark mode toggle
-3. **Real-time collaboration** - WebSocket sync (like Figma)
-4. **Version history** - Named saves, branching
-
-### Long-term
-1. **Backend integration** - REST API for persistence
-2. **Preview mode** - Simulate funnel flow
-3. **Analytics overlay** - Show conversion rates on edges
-4. **A/B testing** - Variant nodes
-
-## Tech Stack
-
-- **Framework:** React 19 with TypeScript
-- **Build Tool:** Vite 7
-- **Graph Library:** @xyflow/react (React Flow v12)
-- **Styling:** Tailwind CSS v4
-- **ID Generation:** nanoid
+---
 
 ## Scripts
 
 | Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
+|--------|-------------|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build |
+| `npm run preview` | Serve production build locally |
 | `npm run lint` | Run ESLint |
-
-## License
-
-MIT License - See [LICENSE](LICENSE) for details.
 
 ---
 
-## Part 2: Dashboard Architecture
+## Part 2: Dashboard architecture
 
-See [docs/dashboard-architecture.md](docs/dashboard-architecture.md) for the comprehensive dashboard architecture answer.
+The written answer for the **modern dashboard architecture** (scalable front-end, team patterns, WCAG, performance, DX, testing, release) is in:
+
+**[docs/dashboard-architecture.md](docs/dashboard-architecture.md)**
+
+It covers: architecture and feature modules, design system, data fetching and state, performance, DX and scaling, testing strategy, and release/quality.
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).

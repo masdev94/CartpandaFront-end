@@ -175,7 +175,13 @@ export function useFunnelStore() {
   const getState = useCallback((): FunnelState => {
     return { nodes, edges };
   }, [nodes, edges]);
-  
+
+  // Explicit save to localStorage (for Save button and Ctrl+S)
+  const saveFunnel = useCallback(() => {
+    const state: FunnelState = { nodes, edges };
+    saveFunnelToStorage(state);
+  }, [nodes, edges]);
+
   // Undo
   const undo = useCallback(() => {
     if (historyIndex > 0) {
@@ -214,6 +220,7 @@ export function useFunnelStore() {
     clearCanvas,
     loadState,
     getState,
+    saveFunnel,
     undo,
     redo,
     canUndo,

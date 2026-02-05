@@ -1,4 +1,21 @@
+import type { ComponentType } from 'react';
+import {
+  HiOutlineArrowTrendingDown,
+  HiOutlineArrowTrendingUp,
+  HiOutlineCheckCircle,
+  HiOutlineDocumentText,
+  HiOutlineShoppingCart,
+} from 'react-icons/hi2';
 import type { NodeTemplate, FunnelNodeType } from '../types';
+
+// React Icon components per node type (used by FunnelNode and Sidebar)
+export const NODE_ICON_COMPONENTS: Record<FunnelNodeType, ComponentType<{ className?: string }>> = {
+  salesPage: HiOutlineDocumentText,
+  orderPage: HiOutlineShoppingCart,
+  upsell: HiOutlineArrowTrendingUp,
+  downsell: HiOutlineArrowTrendingDown,
+  thankYou: HiOutlineCheckCircle,
+};
 
 // Tailwind classes for each node type (used by FunnelNode and Sidebar)
 export const NODE_COLORS: Record<FunnelNodeType, { bg: string; border: string; text: string; btn: string }> = {
@@ -34,21 +51,12 @@ export const NODE_COLORS: Record<FunnelNodeType, { bg: string; border: string; t
   },
 };
 
-// Simple icons (emoji kept for speed; could be SVG later)
-export const NODE_ICONS: Record<FunnelNodeType, string> = {
-  salesPage: '📄',
-  orderPage: '🛒',
-  upsell: '⬆️',
-  downsell: '⬇️',
-  thankYou: '✅',
-};
-
 export const NODE_TEMPLATES: NodeTemplate[] = [
-  { type: 'salesPage', label: 'Sales Page', icon: NODE_ICONS.salesPage, description: 'Landing page for your offer', buttonLabel: 'Buy Now', color: 'blue' },
-  { type: 'orderPage', label: 'Order Page', icon: NODE_ICONS.orderPage, description: 'Checkout and payment', buttonLabel: 'Complete Order', color: 'green' },
-  { type: 'upsell', label: 'Upsell', icon: NODE_ICONS.upsell, description: 'Extra offer after purchase', buttonLabel: 'Yes, Add This!', color: 'purple' },
-  { type: 'downsell', label: 'Downsell', icon: NODE_ICONS.downsell, description: 'Alternative if they decline', buttonLabel: 'Get This Instead', color: 'orange' },
-  { type: 'thankYou', label: 'Thank You', icon: NODE_ICONS.thankYou, description: 'Confirmation page', buttonLabel: 'View Order', color: 'emerald' },
+  { type: 'salesPage', label: 'Sales Page', icon: '', description: 'Landing page for your offer', buttonLabel: 'Buy Now', color: 'blue' },
+  { type: 'orderPage', label: 'Order Page', icon: '', description: 'Checkout and payment', buttonLabel: 'Complete Order', color: 'green' },
+  { type: 'upsell', label: 'Upsell', icon: '', description: 'Extra offer after purchase', buttonLabel: 'Yes, Add This!', color: 'purple' },
+  { type: 'downsell', label: 'Downsell', icon: '', description: 'Alternative if they decline', buttonLabel: 'Get This Instead', color: 'orange' },
+  { type: 'thankYou', label: 'Thank You', icon: '', description: 'Confirmation page', buttonLabel: 'View Order', color: 'emerald' },
 ];
 
 export const DEFAULT_LABELS: Record<FunnelNodeType, string> = {

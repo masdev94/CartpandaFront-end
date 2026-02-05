@@ -1,19 +1,18 @@
 import { memo, useCallback } from 'react';
+import { HiOutlineExclamationTriangle } from 'react-icons/hi2';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import type { FunnelNodeData } from '../types';
-import { NODE_COLORS, NODE_ICONS } from '../constants/nodeTemplates';
+import { NODE_COLORS, NODE_ICON_COMPONENTS } from '../constants/nodeTemplates';
 
 type Props = NodeProps & { data: FunnelNodeData };
 
-/**
- * Node card: icon + title (+ optional ⚠️), thumbnail, primary button label.
- * ○ Left = incoming (target). ● Right = outgoing (source). Thank You has no outgoing.
- */
+
 function FunnelNodeComponent({ data, selected }: Props) {
   const nodeType = data.nodeType;
   const colors = NODE_COLORS[nodeType];
-  const icon = NODE_ICONS[nodeType];
+  const IconComponent = NODE_ICON_COMPONENTS[nodeType];
   const isThankYou = nodeType === 'thankYou';
+  const isSalesPage = nodeType === 'salesPage';
   const hasWarning = Boolean(data.hasWarning);
 
   const stopProp = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
@@ -21,68 +20,72 @@ function FunnelNodeComponent({ data, selected }: Props) {
   return (
     <div
       className={`
-        relative w-[200px] rounded-lg border-2 bg-white shadow-md transition-shadow
-        ${colors.border}
-        ${selected ? 'ring-2 ring-indigo-500 ring-offset-2 shadow-lg' : ''}
+        relative w-[220px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md
+        transition-all duration-200 ease-out
+        dark:border-slate-600 dark:bg-slate-800
+        ${selected ? 'ring-2 ring-indigo-500 ring-offset-2 shadow-lg dark:ring-offset-slate-900' : 'hover:shadow-lg'}
       `}
       role="button"
       aria-label={`${data.label} page`}
       tabIndex={0}
     >
-      {/* Incoming: left ○ */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="target"
-        className="!left-0 !top-1/2 !-translate-y-1/2 !h-3 !w-3 !rounded-full !border-2 !border-white !bg-slate-400 hover:!bg-indigo-500"
-        aria-label="Incoming connection"
-      />
+      {/* Accent bar by type (same color as border) */}
+      <div className={`h-1 w-full rounded-t-xl ${colors.border.replace('border-', 'bg-')}`} aria-hidden />
 
-      <div className="px-3 py-3 pl-5 pr-5">
-        {/* Title row: icon + label + optional warning */}
-        <div className="mb-2 flex items-center gap-2">
-          <span className="text-lg leading-none" aria-hidden>
-            {icon}
+      {/* Incoming: left ○ — Sales Page is entry point (no input handle) */}
+      {!isSalesPage && (
+        <Handle
+          type="target"
+          position={Position.Left}
+          id="target"
+          className="!left-0 !top-1/2 !h-11 !w-11 !-translate-y-1/2 !rounded-full !border-2 !border-white !bg-slate-400 hover:!bg-indigo-500 dark:!border-slate-700 dark:!bg-slate-500 md:!h-3 md:!w-3"
+          aria-label="Incoming connection"
+        />
+      )}
+
+      <div className="p-3 pt-2.5">
+        {/* Title row: icon badge + label + optional warning */}
+        <div className="mb-3 flex items-center gap-2.5">
+          <span
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border ${colors.bg} ${colors.border} dark:bg-slate-700 dark:border-slate-600`}
+            aria-hidden
+          >
+            <IconComponent className={`h-4 w-4 ${colors.text} dark:text-slate-200`} />
           </span>
-          <h3 className={`min-w-0 flex-1 truncate font-semibold text-sm ${colors.text}`}>
+          <h3 className={`min-w-0 flex-1 truncate font-semibold text-sm ${colors.text} dark:text-slate-100`}>
             {data.label}
           </h3>
           {hasWarning && (
-            <span
-              className="shrink-0 text-amber-500"
+            <HiOutlineExclamationTriangle
+              className="h-5 w-5 shrink-0 text-amber-500 dark:text-amber-400"
               title="This node has a validation warning"
               aria-label="Warning"
-            >
-              ⚠︎
-            </span>
+            />
           )}
         </div>
         {/* Thumbnail placeholder */}
-        <div className="mb-2 flex h-14 items-center justify-center rounded border border-slate-200 bg-slate-50/80">
-          <span className="text-xs text-slate-400">thumbnail</span>
+        <div className="mb-3 flex h-16 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-600 dark:bg-slate-700/60">
+          <span className="text-xs font-medium text-slate-400 dark:text-slate-400">Preview</span>
         </div>
-        {/* Primary button label (static) */}
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={stopProp}
-            className={`w-full rounded py-2 px-3 text-xs font-medium ${colors.btn}`}
-            tabIndex={-1}
-            aria-hidden
-          >
-            {data.buttonLabel}
-          </button>
-        </div>
-        <p className="mt-1 text-[10px] text-slate-400">Primary button: &quot;{data.buttonLabel}&quot;</p>
+        {/* CTA preview (static label per node type) */}
+        <button
+          type="button"
+          onClick={stopProp}
+          className={`flex min-h-[40px] w-full items-center justify-center rounded-lg py-2.5 px-3 text-sm font-medium shadow-sm transition-opacity hover:opacity-90 touch-manipulation ${colors.btn}`}
+          tabIndex={-1}
+          aria-hidden
+        >
+          {data.buttonLabel}
+        </button>
       </div>
 
-      {/* Outgoing: right ●. Thank You has no outgoing (×) */}
+      {/* Outgoing: right ● — larger touch target on mobile */}
       {!isThankYou && (
         <Handle
           type="source"
           position={Position.Right}
           id="source"
-          className="!right-0 !top-1/2 !-translate-y-1/2 !h-3 !w-3 !rounded-full !border-2 !border-white !bg-slate-500 hover:!bg-indigo-500"
+          className="!right-0 !top-1/2 !h-11 !w-11 !-translate-y-1/2 !rounded-full !border-2 !border-white !bg-slate-500 hover:!bg-indigo-500 dark:!border-slate-700 dark:!bg-slate-500 md:!h-3 md:!w-3"
           aria-label="Outgoing connection"
         />
       )}
