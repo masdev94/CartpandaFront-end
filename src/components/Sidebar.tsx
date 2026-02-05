@@ -173,7 +173,7 @@ function SidebarComponent({
                 <span className="mt-0.5 h-1 w-1 shrink-0 rounded-full bg-slate-400 dark:bg-slate-400" aria-hidden />
                 <span>
                   <span className="font-medium text-slate-800 dark:text-slate-100">Connect nodes</span>
-                  <span className="block mt-0.5 text-slate-600 dark:text-slate-300">From ● (right) to (left) on another node.</span>
+                  <span className="block mt-0.5 text-slate-600 dark:text-slate-300">Drag from the <strong>right dot</strong> (indigo) on one card to the <strong>left dot</strong> (gray) on another.</span>
                 </span>
               </li>
               <li className="flex gap-2">

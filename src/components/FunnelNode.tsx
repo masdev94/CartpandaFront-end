@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo } from 'react';
 import { HiOutlineExclamationTriangle } from 'react-icons/hi2';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import type { FunnelNodeData } from '../types';
@@ -14,8 +14,6 @@ function FunnelNodeComponent({ data, selected }: Props) {
   const isThankYou = nodeType === 'thankYou';
   const isSalesPage = nodeType === 'salesPage';
   const hasWarning = Boolean(data.hasWarning);
-
-  const stopProp = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
 
   return (
     <div
@@ -54,7 +52,7 @@ function FunnelNodeComponent({ data, selected }: Props) {
           </div>
           <button
             type="button"
-            onClick={stopProp}
+            onClick={(e) => e.stopPropagation()}
             className={`flex min-h-[40px] w-full items-center justify-center rounded-lg py-2.5 px-3 text-sm font-medium shadow-sm transition-opacity hover:opacity-90 touch-manipulation ${colors.btn}`}
             tabIndex={-1}
             aria-hidden
@@ -69,8 +67,9 @@ function FunnelNodeComponent({ data, selected }: Props) {
           type="target"
           position={Position.Left}
           id="target"
-          className="!left-0 !top-1/2 !z-10 !h-11 !w-11 !-translate-y-1/2 !rounded-full !border-2 !border-white !bg-slate-400 hover:!bg-indigo-500 dark:!border-slate-700 dark:!bg-slate-500 md:!h-3 md:!w-3"
-          aria-label="Incoming connection"
+          className="!-left-2 !top-1/2 !z-10 !h-5 !w-5 !-translate-y-1/2 !rounded-full !border-2 !border-white !bg-slate-400 !shadow hover:!bg-slate-500 dark:!border-slate-600 dark:!bg-slate-500 dark:hover:!bg-slate-400"
+          aria-label="Incoming connection — drag a connection from another node to here"
+          title="Drop connections here (incoming)"
         />
       )}
 
@@ -79,8 +78,9 @@ function FunnelNodeComponent({ data, selected }: Props) {
           type="source"
           position={Position.Right}
           id="source"
-          className="!right-0 !top-1/2 !z-10 !h-11 !w-11 !-translate-y-1/2 !rounded-full !border-2 !border-white !bg-slate-500 hover:!bg-indigo-500 dark:!border-slate-700 dark:!bg-slate-500 md:!h-3 md:!w-3"
-          aria-label="Outgoing connection"
+          className="!-right-2 !top-1/2 !z-10 !h-5 !w-5 !-translate-y-1/2 !rounded-full !border-2 !border-white !bg-indigo-500 !shadow hover:!bg-indigo-600 dark:!border-slate-600 dark:!bg-indigo-500 dark:hover:!bg-indigo-400"
+          aria-label="Outgoing connection — drag from here to another node"
+          title="Drag from here to connect to another node"
         />
       )}
     </div>

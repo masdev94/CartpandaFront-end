@@ -11,25 +11,17 @@ interface ValidationPanelProps {
   onClose?: () => void;
 }
 
-function getSatisfiedMessages(nodes: FunnelNode[], edges: FunnelEdge[]): string[] {
-  const out: string[] = [];
-  const thankYous = nodes.filter((n) => n.data.nodeType === 'thankYou');
-  const outgoingByNode = new Map<string, number>();
-  edges.forEach((e) => outgoingByNode.set(e.source, (outgoingByNode.get(e.source) ?? 0) + 1));
-  thankYous.forEach((n) => {
-    if ((outgoingByNode.get(n.id) ?? 0) === 0) {
-      out.push(`Thank You has no out edges`);
-    }
-  });
-  if (out.length > 1) out.length = 1;
-  return out;
-}
-
 function ValidationPanelComponent({ nodes, edges, open, onNodeFocus, onClose }: ValidationPanelProps) {
   const issues = useMemo(() => validateFunnel(nodes, edges), [nodes, edges]);
-  const satisfied = useMemo(() => getSatisfiedMessages(nodes, edges), [nodes, edges]);
 
   if (!open) return null;
+
+  const statusMessage =
+    issues.length > 0
+      ? null
+      : nodes.length === 0
+        ? 'Add pages to validate.'
+        : 'Funnel rules OK';
 
   return (
     <div
@@ -54,20 +46,11 @@ function ValidationPanelComponent({ nodes, edges, open, onNodeFocus, onClose }: 
         {issues.map((issue) => (
           <IssueRow key={issue.id} issue={issue} onNodeFocus={onNodeFocus} />
         ))}
-        {issues.length === 0 && satisfied.length > 0 && (
-          <li className="flex items-center gap-2 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400">
-            <HiOutlineCheckCircle className="h-5 w-5 shrink-0" aria-hidden />
-            {satisfied[0]}
-          </li>
-        )}
-        {issues.length === 0 && satisfied.length === 0 && nodes.length > 0 && (
+        {statusMessage && (
           <li className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 dark:text-slate-300">
             <HiOutlineCheckCircle className="h-5 w-5 shrink-0" aria-hidden />
-            Funnel rules OK
+            {statusMessage}
           </li>
-        )}
-        {issues.length === 0 && nodes.length === 0 && (
-          <li className="px-3 py-2 text-sm text-slate-500 dark:text-slate-300">Add pages to validate.</li>
         )}
       </ul>
     </div>

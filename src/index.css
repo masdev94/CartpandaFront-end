@@ -52,24 +52,28 @@ body {
   cursor: grabbing;
 }
 .react-flow__edge-path {
-  stroke: #64748B;
-  stroke-width: 2;
-}
-.dark .react-flow__edge-path {
-  stroke: #94A3B8;
-}
-.react-flow__edge.selected .react-flow__edge-path {
-  stroke: var(--accent);
+  stroke: #059669;
   stroke-width: 2.5;
 }
+.dark .react-flow__edge-path {
+  stroke: #34d399;
+}
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #047857;
+  stroke-width: 3;
+}
+.dark .react-flow__edge.selected .react-flow__edge-path {
+  stroke: #6ee7b7;
+}
 .react-flow__edge-path:hover {
-  stroke: var(--accent);
+  stroke: #047857;
+}
+.dark .react-flow__edge-path:hover {
+  stroke: #6ee7b7;
 }
 .react-flow__handle {
-  transition: transform 0.15s ease, background-color 0.15s ease;
-}
-.react-flow__handle:hover {
-  transform: scale(1.25);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  cursor: crosshair;
 }
 .react-flow__controls-button {
   border-bottom: 1px solid #E2E8F0 !important;
@@ -106,9 +110,9 @@ body {
   --xy-background-pattern-line-color-default: #94a3b8;
   --xy-background-pattern-dots-color-default: #94a3b8;
   --xy-background-pattern-cross-color-default: #94a3b8;
-  --xy-edge-stroke-default: #94a3b8;
-  --xy-edge-stroke-selected-default: #c7d2fe;
-  --xy-connectionline-stroke-default: #94a3b8;
+  --xy-edge-stroke-default: #34d399;
+  --xy-edge-stroke-selected-default: #6ee7b7;
+  --xy-connectionline-stroke-default: #34d399;
   --xy-controls-button-background-color-default: #334155;
   --xy-controls-button-background-color-hover-default: #475569;
   --xy-controls-button-color-default: #e2e8f0;

@@ -1,5 +1,4 @@
 import { useCallback, useRef, useEffect, useState, useMemo } from 'react';
-import { HiOutlineCheckCircle, HiOutlineExclamationTriangle } from 'react-icons/hi2';
 import {
   ReactFlow,
   Background,
@@ -30,6 +29,7 @@ const nodeTypes = {
 };
 
 const VALID_NODE_TYPES: FunnelNodeType[] = ['salesPage', 'orderPage', 'upsell', 'downsell', 'thankYou'];
+const EDGE_STROKE = '#059669';
 
 export function FunnelBuilder() {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -37,6 +37,8 @@ export function FunnelBuilder() {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [validationOpen, setValidationOpen] = useState(false);
   const [paletteDrawerOpen, setPaletteDrawerOpen] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     nodes,
@@ -55,51 +57,27 @@ export function FunnelBuilder() {
     canRedo,
   } = useFunnelStore();
 
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const [validationNotification, setValidationNotification] = useState<{ message: string; type: 'issues' | 'ok' | 'empty' } | null>(null);
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window === 'undefined') return 'light';
-    return (localStorage.getItem('funnel-builder-theme') as 'light' | 'dark') || 'light';
-  });
+  const [theme, setTheme] = useState<'light' | 'dark'>(() =>
+    (typeof window !== 'undefined' && (localStorage.getItem('funnel-builder-theme') as 'light' | 'dark')) || 'light'
+  );
+
+  const showToast = useCallback((message: string, type: 'success' | 'error', duration = type === 'error' ? 3000 : 2000) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ message, type });
+    toastTimerRef.current = setTimeout(() => {
+      setToast(null);
+      toastTimerRef.current = null;
+    }, duration);
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('funnel-builder-theme', theme);
   }, [theme]);
 
+  useEffect(() => () => { if (toastTimerRef.current) clearTimeout(toastTimerRef.current); }, []);
+
   const issues = useMemo(() => validateFunnel(nodes, edges), [nodes, edges]);
-  const prevIssuesLengthRef = useRef(0);
-
-  useEffect(() => {
-    if (!validationOpen) {
-      setValidationNotification(null);
-      return;
-    }
-    const type = issues.length > 0 ? 'issues' : nodes.length > 0 ? 'ok' : 'empty';
-    const message = issues.length > 0
-      ? `${issues.length} validation issue(s) found — see panel for details`
-      : nodes.length > 0
-        ? 'Funnel rules OK'
-        : 'Add pages to validate.';
-    setValidationNotification({ message, type });
-    const t = setTimeout(() => setValidationNotification(null), 3000);
-    return () => clearTimeout(t);
-  }, [validationOpen]);
-
-  useEffect(() => {
-    if (issues.length === 0) {
-      prevIssuesLengthRef.current = 0;
-      return;
-    }
-    if (prevIssuesLengthRef.current > 0) return;
-    prevIssuesLengthRef.current = issues.length;
-    setValidationNotification({
-      message: `${issues.length} validation issue(s) found — click Validation for details`,
-      type: 'issues',
-    });
-    const t = setTimeout(() => setValidationNotification(null), 3000);
-    return () => clearTimeout(t);
-  }, [issues.length]);
   const nodeIdsWithWarning = useMemo(
     () => new Set(issues.map((i) => i.nodeId).filter(Boolean) as string[]),
     [issues]
@@ -147,9 +125,7 @@ export function FunnelBuilder() {
         return;
       }
       if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) return;
-      const x = position.x;
-      const y = position.y;
-      setTimeout(() => addNode(nodeType, { x, y }), 0);
+      setTimeout(() => addNode(nodeType, position), 0);
     },
     [addNode]
   );
@@ -197,13 +173,12 @@ export function FunnelBuilder() {
       const targetNode = nodes.find((n) => n.id === connection.target);
       const error = isValidConnection(sourceNode, targetNode, edges);
       if (error) {
-        setToast({ message: error, type: 'error' });
-        setTimeout(() => setToast(null), 3000);
+        showToast(error, 'error');
         return;
       }
       onConnect(connection);
     },
-    [nodes, edges, onConnect]
+    [nodes, edges, onConnect, showToast]
   );
 
   useEffect(() => {
@@ -211,8 +186,7 @@ export function FunnelBuilder() {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         saveFunnel();
-        setToast({ message: 'Funnel saved!', type: 'success' });
-        setTimeout(() => setToast(null), 2000);
+        showToast('Funnel saved!', 'success');
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
@@ -228,7 +202,7 @@ export function FunnelBuilder() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [undo, redo, saveFunnel]);
+  }, [undo, redo, saveFunnel, showToast]);
 
   const isEmpty = nodes.length === 0;
 
@@ -239,11 +213,7 @@ export function FunnelBuilder() {
         onToggleTheme={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
         onImport={loadState}
         onExport={getState}
-        onSave={() => {
-          saveFunnel();
-          setToast({ message: 'Funnel saved!', type: 'success' });
-          setTimeout(() => setToast(null), 2000);
-        }}
+        onSave={() => { saveFunnel(); showToast('Funnel saved!', 'success'); }}
         onClear={clearCanvas}
         onUndo={undo}
         onRedo={redo}
@@ -303,9 +273,9 @@ export function FunnelBuilder() {
               type: 'smoothstep',
               animated: false,
               markerEnd: { type: 'arrowclosed' as const },
-              style: { stroke: '#64748B', strokeWidth: 2 },
+              style: { stroke: EDGE_STROKE, strokeWidth: 2.5 },
             }}
-            connectionLineStyle={{ stroke: '#6366f1', strokeWidth: 2 }}
+            connectionLineStyle={{ stroke: EDGE_STROKE, strokeWidth: 2.5 }}
             fitView
             fitViewOptions={{ padding: 0.25 }}
             minZoom={0.1}
@@ -320,13 +290,7 @@ export function FunnelBuilder() {
             selectionOnDrag
             proOptions={{ hideAttribution: true }}
           >
-            <Background
-              variant={BackgroundVariant.Lines}
-              gap={30}
-              size={1}
-              lineWidth={0.75}
-              color={theme === 'light' ? '#94a3b8' : '#94a3b8'}
-            />
+            <Background variant={BackgroundVariant.Lines} gap={30} size={1} lineWidth={0.75} color="#94a3b8" />
             <Controls
               showInteractive={false}
               className="!rounded-lg !border !border-slate-200 !bg-white !shadow-sm dark:!border-slate-600 dark:!bg-slate-800"
@@ -368,7 +332,7 @@ export function FunnelBuilder() {
                   Tap &quot;Add page&quot; above, then choose a page type to add to the canvas.
                 </p>
                 <p className="mt-3 text-xs text-slate-400 dark:text-slate-400">
-                  Pan: drag background. Connect: drag from ● (right) to ○ (left).
+                  Pan: drag background. Connect: drag from the right dot on one card to the left dot on another.
                 </p>
               </div>
             </div>
@@ -383,20 +347,6 @@ export function FunnelBuilder() {
           aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
         >
           {toast.message}
-        </div>
-      )}
-      {validationNotification && (
-        <div
-          className="fixed left-1/2 top-4 z-50 flex -translate-x-1/2 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-800 shadow-lg dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-          role="status"
-          aria-live="polite"
-        >
-          {validationNotification.type === 'issues' ? (
-            <HiOutlineExclamationTriangle className="h-5 w-5 shrink-0 text-amber-500" aria-hidden />
-          ) : validationNotification.type === 'ok' ? (
-            <HiOutlineCheckCircle className="h-5 w-5 shrink-0 text-emerald-500" aria-hidden />
-          ) : null}
-          <span>{validationNotification.message}</span>
         </div>
       )}
     </div>

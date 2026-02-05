@@ -18,27 +18,29 @@ interface NodeCounters {
   downsell: number;
 }
 
+function syncCountersFromNodes(counters: { current: NodeCounters }, nodes: FunnelNode[]) {
+  nodes.forEach((node) => {
+    if (node.data.nodeType === 'upsell' && node.data.index)
+      counters.current.upsell = Math.max(counters.current.upsell, node.data.index);
+    if (node.data.nodeType === 'downsell' && node.data.index)
+      counters.current.downsell = Math.max(counters.current.downsell, node.data.index);
+  });
+}
+
 export function useFunnelStore() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<FunnelNodeData>>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const countersRef = useRef<NodeCounters>({ upsell: 0, downsell: 0 });
-
   const [history, setHistory] = useState<FunnelState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const isUndoRedoRef = useRef(false);
+
   useEffect(() => {
     const saved = loadFunnelFromStorage();
-    if (saved && saved.nodes.length > 0) {
+    if (saved?.nodes?.length) {
       setNodes(saved.nodes);
       setEdges(saved.edges);
-      saved.nodes.forEach(node => {
-        if (node.data.nodeType === 'upsell' && node.data.index) {
-          countersRef.current.upsell = Math.max(countersRef.current.upsell, node.data.index);
-        }
-        if (node.data.nodeType === 'downsell' && node.data.index) {
-          countersRef.current.downsell = Math.max(countersRef.current.downsell, node.data.index);
-        }
-      });
+      syncCountersFromNodes(countersRef, saved.nodes);
       setHistory([saved]);
       setHistoryIndex(0);
     }
@@ -59,7 +61,7 @@ export function useFunnelStore() {
       }
       isUndoRedoRef.current = false;
     }
-  }, [nodes, edges, historyIndex]);
+  }, [nodes, edges]);
 
   const generateLabel = useCallback((nodeType: FunnelNodeType): { label: string; index?: number } => {
     if (nodeType === 'upsell') {
@@ -125,14 +127,7 @@ export function useFunnelStore() {
     setNodes(state.nodes);
     setEdges(state.edges);
     countersRef.current = { upsell: 0, downsell: 0 };
-    state.nodes.forEach(node => {
-      if (node.data.nodeType === 'upsell' && node.data.index) {
-        countersRef.current.upsell = Math.max(countersRef.current.upsell, node.data.index);
-      }
-      if (node.data.nodeType === 'downsell' && node.data.index) {
-        countersRef.current.downsell = Math.max(countersRef.current.downsell, node.data.index);
-      }
-    });
+    syncCountersFromNodes(countersRef, state.nodes);
   }, [setNodes, setEdges]);
 
   const getState = useCallback((): FunnelState => {
