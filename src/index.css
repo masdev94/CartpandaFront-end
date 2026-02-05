@@ -13,10 +13,12 @@
   -moz-osx-font-smoothing: grayscale;
   --accent: #4F46E5;
   --canvas-bg: #F8FAFC;
+  --grid-line: #94a3b8;
 }
 
 .dark {
   --canvas-bg: #1E293B;
+  --grid-line: #475569;
   --text-primary: #F1F5F9;
   --text-secondary: #CBD5E1;
   --text-muted: #94A3B8;
@@ -97,8 +99,14 @@ body {
   bottom: 1rem !important;
   right: 1rem !important;
 }
+/* Transparent so the grid Background fills the entire canvas */
 .react-flow__pane {
-  background-color: var(--canvas-bg);
+  background-color: transparent;
+}
+
+/* Grid line color: visible in light mode, subtle in dark */
+.react-flow__background .react-flow__background-pattern {
+  stroke: var(--grid-line);
 }
 
 @media (max-width: 767px) {

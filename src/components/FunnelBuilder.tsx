@@ -8,6 +8,7 @@ import {
   type ReactFlowInstance,
   type Node,
   type Edge,
+  type Connection,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -17,7 +18,7 @@ import { Toolbar } from './Toolbar';
 import { ValidationPanel } from './ValidationPanel';
 import { MiniMap } from './MiniMap';
 import { useFunnelStore } from '../hooks/useFunnelStore';
-import { validateFunnel } from '../utils/validation';
+import { validateFunnel, isValidConnection } from '../utils/validation';
 import type { FunnelNodeType } from '../types';
 
 const nodeTypes = {
@@ -176,6 +177,32 @@ export function FunnelBuilder() {
     }
   }, [nodes]);
 
+  /** React Flow uses this to show valid/invalid drop targets while dragging a connection. */
+  const isValidConnectionForFlow = useCallback(
+    (connection: Connection | Edge) => {
+      const sourceNode = nodes.find((n) => n.id === connection.source);
+      const targetNode = nodes.find((n) => n.id === connection.target);
+      return isValidConnection(sourceNode, targetNode, edges) === null;
+    },
+    [nodes, edges]
+  );
+
+  /** Wrap store onConnect: show toast when connection is invalid, then call store when valid. */
+  const handleConnect = useCallback(
+    (connection: Connection) => {
+      const sourceNode = nodes.find((n) => n.id === connection.source);
+      const targetNode = nodes.find((n) => n.id === connection.target);
+      const error = isValidConnection(sourceNode, targetNode, edges);
+      if (error) {
+        setToast(error);
+        setTimeout(() => setToast(null), 3000);
+        return;
+      }
+      onConnect(connection);
+    },
+    [nodes, edges, onConnect]
+  );
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
@@ -261,7 +288,8 @@ export function FunnelBuilder() {
             edges={edges as Edge[]}
             onNodesChange={onNodesChange as never}
             onEdgesChange={onEdgesChange as never}
-            onConnect={onConnect}
+            onConnect={handleConnect}
+            isValidConnection={isValidConnectionForFlow}
             onInit={onInit}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
@@ -284,7 +312,13 @@ export function FunnelBuilder() {
             selectionOnDrag
             proOptions={{ hideAttribution: true }}
           >
-            <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="[--bg-dots:theme(colors.slate.300)] dark:[--bg-dots:theme(colors.slate.600)]" />
+            <Background
+              variant={BackgroundVariant.Lines}
+              gap={30}
+              size={1}
+              lineWidth={0.75}
+              color={theme === 'light' ? '#94a3b8' : '#475569'}
+            />
             <Controls
               showInteractive={false}
               className="!rounded-lg !border !border-slate-200 !bg-white !shadow-sm dark:!border-slate-600 dark:!bg-slate-800"
