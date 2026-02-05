@@ -252,7 +252,8 @@ export function FunnelBuilder() {
         onOpenPalette={() => setPaletteDrawerOpen(true)}
       />
 
-      <div className="relative flex flex-1 overflow-hidden">
+      {/* Main container: sidebar + canvas; min-h-0 lets flex child shrink so overflow works */}
+      <div className="funnel-container relative flex min-h-0 flex-1 flex-row overflow-hidden">
         {/* Click-outside backdrop: closes Validation panel when clicking canvas/sidebar */}
         {validationOpen && (
           <button
@@ -277,13 +278,14 @@ export function FunnelBuilder() {
         <main
           id="main-canvas"
           ref={wrapperRef}
-          className="relative flex-1"
+          className="funnel-canvas relative min-h-0 flex-1"
           role="application"
           aria-label="Funnel canvas"
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
         >
           <ReactFlow
+            colorMode={theme}
             nodes={nodesWithWarnings as Node[]}
             edges={edges as Edge[]}
             onNodesChange={onNodesChange as never}
@@ -317,7 +319,7 @@ export function FunnelBuilder() {
               gap={30}
               size={1}
               lineWidth={0.75}
-              color={theme === 'light' ? '#94a3b8' : '#475569'}
+              color={theme === 'light' ? '#94a3b8' : '#94a3b8'}
             />
             <Controls
               showInteractive={false}

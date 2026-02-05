@@ -83,15 +83,16 @@ function ToolbarComponent({
 
   return (
     <header
-      className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:px-4"
+      className="flex min-h-[75px] flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-slate-200 bg-white px-3 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:px-4"
       role="toolbar"
       aria-label="Funnel builder toolbar"
     >
-      <div className="flex min-h-[44px] items-center gap-2 sm:gap-4">
-        <h1 className="truncate text-base font-semibold text-slate-800 dark:text-slate-100 sm:text-lg">
+      {/* Left: title + undo/redo + theme + Add page (mobile) */}
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <h1 className="min-w-0 truncate text-base font-semibold text-slate-800 dark:text-slate-100 sm:text-lg">
           Cartpanda Funnel
         </h1>
-        <div className="hidden items-center gap-1 sm:flex">
+        <div className="hidden shrink-0 items-center gap-0.5 sm:flex">
           <button
             type="button"
             onClick={onUndo}
@@ -113,24 +114,22 @@ function ToolbarComponent({
             <HiOutlineArrowUturnRight className={iconClass} />
           </button>
         </div>
-        {/* Theme: light / dark */}
         {onToggleTheme && (
           <button
             type="button"
             onClick={onToggleTheme}
-            className={`${btn} border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700`}
+            className={`${btn} shrink-0 border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700`}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
           >
             {theme === 'dark' ? <HiOutlineSun className={iconClass} /> : <HiOutlineMoon className={iconClass} />}
           </button>
         )}
-        {/* Mobile: Add page — opens palette drawer */}
         {onOpenPalette && (
           <button
             type="button"
             onClick={onOpenPalette}
-            className={`${btn} bg-indigo-600 text-white hover:bg-indigo-700 md:hidden`}
+            className={`${btn} shrink-0 bg-indigo-600 text-white hover:bg-indigo-700 md:hidden`}
             aria-label="Add page to canvas"
           >
             <HiOutlinePlus className={iconClass} />
@@ -139,9 +138,10 @@ function ToolbarComponent({
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Desktop: all actions visible */}
-        <div className="hidden gap-2 md:flex">
+      {/* Right: Save, Export, Import, Validation, More/Clear — aligned end, can wrap */}
+      <div className="flex min-h-[44px] flex-1 flex-wrap items-center justify-end gap-2">
+        {/* Desktop: Save, Export, Import */}
+        <div className="hidden items-center gap-2 md:flex">
           {onSave && (
             <button
               type="button"

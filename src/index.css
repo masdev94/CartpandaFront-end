@@ -18,7 +18,7 @@
 
 .dark {
   --canvas-bg: #1E293B;
-  --grid-line: #475569;
+  --grid-line: #94a3b8;
   --text-primary: #F1F5F9;
   --text-secondary: #CBD5E1;
   --text-muted: #94A3B8;
@@ -46,6 +46,16 @@ body {
 #root {
   height: 100vh;
   height: 100dvh;
+}
+
+/* Funnel layout: main container (sidebar + canvas) and canvas area */
+.funnel-container {
+  /* Adjust padding or max-width here if you want a boxed layout */
+  /* max-width: 1600px; margin: 0 auto; */
+}
+.funnel-canvas {
+  /* Canvas fills remaining space; add padding here if needed */
+  /* padding: 1rem; */
 }
 
 /* React Flow */
@@ -107,6 +117,25 @@ body {
 /* Grid line color: visible in light mode, subtle in dark */
 .react-flow__background .react-flow__background-pattern {
   stroke: var(--grid-line);
+}
+
+/* React Flow v12 color scheme: dark mode (colorMode="dark") */
+.react-flow.dark {
+  --xy-background-pattern-line-color-default: #94a3b8;
+  --xy-background-pattern-dots-color-default: #94a3b8;
+  --xy-background-pattern-cross-color-default: #94a3b8;
+  --xy-edge-stroke-default: #94a3b8;
+  --xy-edge-stroke-selected-default: #c7d2fe;
+  --xy-connectionline-stroke-default: #94a3b8;
+  --xy-controls-button-background-color-default: #334155;
+  --xy-controls-button-background-color-hover-default: #475569;
+  --xy-controls-button-color-default: #e2e8f0;
+  --xy-controls-button-color-hover-default: #f1f5f9;
+  --xy-controls-button-border-color-default: #475569;
+  --xy-controls-box-shadow-default: 0 0 2px 1px rgba(0, 0, 0, 0.3);
+  --xy-minimap-background-color-default: #1e293b;
+  --xy-selection-background-color-default: rgba(79, 70, 229, 0.15);
+  --xy-selection-border-default: 1px dotted rgba(129, 140, 248, 0.8);
 }
 
 @media (max-width: 767px) {
